@@ -3,8 +3,7 @@ import traceback
 
 from StatsCollector import StatsCollector
 from Parser import Parser
-from cassandra.cluster import Cluster
-from cassandra.policies import TokenAwarePolicy, DCAwareRoundRobinPolicy, RetryPolicy
+from pymongo import MongoClient
 from transactions.DummyTransaction import DummyTransaction
 from transactions.NewOrderTransaction import NewOrderTransaction
 from transactions.PaymentTransaction import PaymentTransaction
@@ -30,31 +29,31 @@ class Client:
     """
     def execute_transaction(self, session, transaction_type, transaction_params):
         transaction = DummyTransaction(session)
-
-        if transaction_type == Parser.NEW_ORDER:
-            transaction = NewOrderTransaction(session)
-
-        elif transaction_type == Parser.PAYMENT:
-            transaction = PaymentTransaction(session)
-
-        elif transaction_type == Parser.DELIVERY:
-            transaction = DeliveryTransaction(session)
-
-        elif transaction_type == Parser.ORDER_STATUS:
-            transaction = OrderStatusTransaction(session)
-
-        elif transaction_type == Parser.STOCK_LEVEL:
-            transaction = StockLevelTransaction(session)
-
-        elif transaction_type == Parser.POPULAR_ITEM:
-            transaction = PopularItemTransaction(session)
-
-        elif transaction_type == Parser.TOP_BALANCE:
-            transaction = TopBalanceTransaction(session)
-
-        elif transaction_type == Parser.ORDER_LINE:
-            pass
-
+        #
+        # if transaction_type == Parser.NEW_ORDER:
+        #     transaction = NewOrderTransaction(session)
+        #
+        # elif transaction_type == Parser.PAYMENT:
+        #     transaction = PaymentTransaction(session)
+        #
+        # elif transaction_type == Parser.DELIVERY:
+        #     transaction = DeliveryTransaction(session)
+        #
+        # elif transaction_type == Parser.ORDER_STATUS:
+        #     transaction = OrderStatusTransaction(session)
+        #
+        # elif transaction_type == Parser.STOCK_LEVEL:
+        #     transaction = StockLevelTransaction(session)
+        #
+        # elif transaction_type == Parser.POPULAR_ITEM:
+        #     transaction = PopularItemTransaction(session)
+        #
+        # elif transaction_type == Parser.TOP_BALANCE:
+        #     transaction = TopBalanceTransaction(session)
+        #
+        # elif transaction_type == Parser.ORDER_LINE:
+        #     pass
+        #
         try:
             transaction.execute(transaction_params)
         except Exception:
@@ -64,13 +63,9 @@ class Client:
     """ Initalize necessary objects, read and execute transaction.
     """
     def execute(self):
-        # Connect to cassandra server
-        cluster = Cluster(
-            load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
-            default_retry_policy=RetryPolicy())
-        session = cluster.connect('cs4224')
-        session.default_consistency_level = DEFAULT_CONSISTENCY_LEVEL
-        session.execute.im_self.default_timeout = 1000000000000000
+        # Connect to mongodb server
+        client = MongoClient('localhost', 21100)
+        session = client.cs4224
 
         # Reading transactions line by line, parsing and execute
         while True:
