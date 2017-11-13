@@ -40,8 +40,9 @@ class OrderStatusTransaction(Transaction):
 
     # Get the customer info using C_ID
     def get_customer_info(self, c_w_id, c_d_id, c_id):
-        result = self.session.execute('select c_first, c_middle, c_last, c_balance from customer where'
-                                      ' c_w_id = {} and c_d_id = {} and c_id = {}'.format(c_w_id, c_d_id, c_id))
+        result = self.session.execute('db.customer.find({c_w_id: "{}", c_d_id: "{}", c_id: "{}"}, '
+                                      '{c_first: 1, c_middle: 1, c_last: 1, c_balance: 1, _id: 0})'
+                                      .format(c_w_id, c_d_id, c_id))
         if not result:
             print 'Cannot find customer with w_id {} d_id {} c_id {}'.format(c_w_id, c_d_id, c_id)
             return
@@ -49,16 +50,16 @@ class OrderStatusTransaction(Transaction):
 
     # Get the last order info from the customer
     def get_last_order(self, c_w_id, c_d_id, c_id):
-        result = self.session.execute('select o_id, o_entry_d, o_carrier_id from order_by_customer where'
-                                      ' o_w_id = {} and o_d_id = {} and o_c_id = {} limit 1'
+        result = self.session.execute('db.order_orderline.find_one({o_w_id: "{}", o_d_id: "{}", '
+                                      'o_c_id: "{}"}, {o_id: 1, o_entry_d: 1, o_carrier_id: 1, _id: 0})'
                                       .format(c_w_id, c_d_id, c_id))
-
         return result[0]
 
     # Get info of each item in the latest order
     def get_order_line(self, c_w_id, c_d_id, o_id):
-        result = self.session.execute('select ol_i_id, ol_supply_w_id, ol_quantity, ol_amount, ol_delivery_d'
-                                      ' from order_line where ol_w_id ={} and ol_d_id = {} and ol_o_id = {}'
+        result = self.session.execute('db.order_orderline.find({orderline.ol_w_id: "{}", orderline.ol_d_id: "{}", '
+                                      'orderline.ol_o_id: "{}"}, {orderline.ol_i_id: 1, orderline.ol_supply_w_id: 1, '
+                                      'orderline.ol_quanity: 1, orderline.ol_amount: 1, orderline.ol_delivery_d: 1, _id: 0})'
                                       .format(c_w_id, c_d_id, o_id))
         return result
 
