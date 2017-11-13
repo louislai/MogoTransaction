@@ -55,14 +55,14 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'w_id'      : line[0],
+            out_data.append({'w_id'      : int(line[0]),
                              'w_name'    : line[1],
                              'w_street_1': line[2],
                              'w_street_2': line[3],
                              'w_city'    : line[4],
                              'w_state'   : line[5],
                              'w_zip'     : line[6],
-                             'w_ytd'     : line[8]})
+                             'w_ytd'     : float(line[8])})
         json.dump(out_data, out_file)
 
 
@@ -71,15 +71,15 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'d_w_id'    : line[0],
-                             'd_id'      : line[1],
+            out_data.append({'d_w_id'    : int(line[0]),
+                             'd_id'      : int(line[1]),
                              'd_name'    : line[2],
                              'd_street_1': line[3],
                              'd_street_2': line[4],
                              'd_city'    : line[5],
                              'd_state'   : line[6],
                              'd_zip'     : line[7],
-                             'd_ytd'     : line[9]})
+                             'd_ytd'     : float(line[9])})
         json.dump(out_data, out_file)
 
 
@@ -88,9 +88,9 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'c_w_id'        : line[0],
-                             'c_d_id'        : line[1],
-                             'c_id'          : line[2],
+            out_data.append({'c_w_id'        : int(line[0]),
+                             'c_d_id'        : int(line[1]),
+                             'c_id'          : int(line[2]),
                              'c_first'       : line[3],
                              'c_middle'      : line[4],
                              'c_last'        : line[5],
@@ -102,12 +102,12 @@ class CSVToJSON:
                              'c_phone'       : line[11],
                              'c_since'       : line[12],
                              'c_credit'      : line[13],
-                             'c_credit_lim'  : line[14],
-                             'c_discount'    : line[15],
-                             'c_balance'     : line[16],
-                             'c_ytd_payment' : line[17],
-                             'c_payment_cnt' : line[18],
-                             'c_delivery_cnt': line[19],
+                             'c_credit_lim'  : float(line[14]),
+                             'c_discount'    : float(line[15]),
+                             'c_balance'     : float(line[16]),
+                             'c_ytd_payment' : float(line[17]),
+                             'c_payment_cnt' : int(line[18]),
+                             'c_delivery_cnt': int(line[19]),
                              'c_data'        : line[20]});
             c_w_id, c_d_id, c_id, c_first, c_middle, c_last =            \
                     line[0], line[1], line[2], line[3], line[4], line[5]
@@ -121,10 +121,10 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'i_id'   : line[0],
+            out_data.append({'i_id'   : int(line[0]),
                              'i_name' : line[1],
-                             'i_price': line[2],
-                             'i_im_id': line[3],
+                             'i_price': float(line[2]),
+                             'i_im_id': int(line[3]),
                              'i_data' : line[4]})
             # Store i_name for order_order_line
             i_id, i_name, i_price = line[0], line[1], line[2]
@@ -138,15 +138,15 @@ class CSVToJSON:
         if line:
             line = line[:-1]
             line = line.split(self.SEPARATOR)
-            self.order_line_queue.append({'ol_w_id'       :line[0],
-                                          'ol_d_id'       :line[1],
-                                          'ol_o_id'       :line[2],
-                                          'ol_number'     :line[3],
-                                          'ol_i_id'       :line[4],
+            self.order_line_queue.append({'ol_w_id'       :int(line[0]),
+                                          'ol_d_id'       :int(line[1]),
+                                          'ol_o_id'       :int(line[2]),
+                                          'ol_number'     :int(line[3]),
+                                          'ol_i_id'       :int(line[4]),
                                           'ol_delivery_d' :line[5],
-                                          'ol_amount'     :line[6],
-                                          'ol_supply_w_id':line[7],
-                                          'ol_quantity'   :line[8],
+                                          'ol_amount'     :float(line[6]),
+                                          'ol_supply_w_id':int(line[7]),
+                                          'ol_quantity'   :float(line[8]),
                                           'ol_dist_info'  :line[9]});
 
         while (len(self.order_line_queue) > 0):
@@ -187,19 +187,19 @@ class CSVToJSON:
             o_w_id, o_d_id, o_id, o_c_id = line[0], line[1], line[2], line[3]
             c_first, c_middle, c_last = self.c_map[self.JOIN_CH.join([o_w_id, o_d_id, o_c_id])]
 
-            obj = {'o_w_id'      : line[0],
-                   'o_d_id'      : line[1],
-                   'o_id'        : line[2],
-                   'o_c_id'      : line[3],
-                   'o_carrier_id': line[4],
-                   'o_ol_cnt'    : line[5],
-                   'o_all_local' : line[6],
-                   'o_entry_d'   : line[7],
-                   'o_c_first'   : c_first,
-                   'o_c_middle'  : c_middle,
-                   'o_c_last'    : c_last,
-                   'o_delivery_d': None,
-                   'o_orderlines': []}
+            obj = {'o_w_id'      :int(line[0]),
+                   'o_d_id'      :int(line[1]),
+                   'o_id'        :int(line[2]),
+                   'o_c_id'      :int(line[3]),
+                   'o_carrier_id':int(line[4]),
+                   'o_ol_cnt'    :float(line[5]),
+                   'o_all_local' :float(line[6]),
+                   'o_entry_d'   :line[7],
+                   'o_c_first'   :c_first,
+                   'o_c_middle'  :c_middle,
+                   'o_c_last'    :c_last,
+                   'o_delivery_d':None,
+                   'o_orderlines':[]}
 
             # Reading order_line match this current order
             while (True):
@@ -215,7 +215,7 @@ class CSVToJSON:
 
                 # Add to orderlines
                 ol_i_id = order_line_obj['ol_i_id']
-                order_line_obj['i_name'], i_price = self.i_map[ol_i_id]
+                order_line_obj['i_name'], i_price = self.i_map[str(ol_i_id)]
                 obj['o_orderlines'].append(order_line_obj)
 
             json.dump(obj, out_file)
@@ -234,24 +234,25 @@ class CSVToJSON:
             s_i_id = line[1]
             i_name, i_price = self.i_map[s_i_id]
 
-            out_data.append({'s_w_id'      : line[0],
-                             's_i_id'      : line[2],
-                             's_quantity'  : line[3],
-                             's_ytd'       : line[4],
-                             's_order_cnt' : line[5],
-                             's_remote_cnt': line[6],
-                             's_dist_01'   : line[7],
-                             's_dist_02'   : line[8],
-                             's_dist_03'   : line[9],
-                             's_dist_04'   : line[10],
-                             's_dist_05'   : line[11],
-                             's_dist_06'   : line[12],
-                             's_dist_07'   : line[13],
-                             's_dist_08'   : line[14],
-                             's_dist_09'   : line[15],
-                             's_dist_10'   : line[16],
+            out_data.append({'s_w_id'      : int(line[0]),
+                             's_i_id'      : int(line[1]),
+                             's_quantity'  : float(line[2]),
+                             's_ytd'       : float(line[3]),
+                             's_order_cnt' : int(line[4]),
+                             's_remote_cnt': int(line[5]),
+                             's_dist_01'   : line[6],
+                             's_dist_02'   : line[7],
+                             's_dist_03'   : line[8],
+                             's_dist_04'   : line[9],
+                             's_dist_05'   : line[10],
+                             's_dist_06'   : line[11],
+                             's_dist_07'   : line[12],
+                             's_dist_08'   : line[13],
+                             's_dist_09'   : line[14],
+                             's_dist_10'   : line[15],
+                             's_data'      : line[16],
                              's_i_name'    : i_name,
-                             's_i_price'   : i_price})
+                             's_i_price'   : float(i_price)})
         json.dump(out_data, out_file)
 
 
@@ -263,9 +264,9 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'d_w_id'     : line[0],
-                             'd_id'       : line[1],
-                             'd_next_o_id': line[10]})
+            out_data.append({'d_w_id'     : int(line[0]),
+                             'd_id'       : int(line[1]),
+                             'd_next_o_id': int(line[10])})
         json.dump(out_data, out_file)
 
 
@@ -277,8 +278,8 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'w_id': line[0],
-                             'w_tax': line[7]})
+            out_data.append({'w_id' : int(line[0]),
+                             'w_tax': float(line[7])})
         json.dump(out_data, out_file)
         
 
@@ -290,9 +291,9 @@ class CSVToJSON:
         reader = csv.reader(csv_file)
         out_data = []
         for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'d_w_id': line[0],
-                             'd_id'  : line[1],
-                             'd_tax' : line[8]})
+            out_data.append({'d_w_id': int(line[0]),
+                             'd_id'  : int(line[1]),
+                             'd_tax' : float(line[8])})
         json.dump(out_data, out_file)
 
 
@@ -308,8 +309,8 @@ class CSVToJSON:
             key = self.JOIN_CH.join((d_w_id, d_id))
             next_undelivered_id = (self.map_last_delivery[key] if key in self.map_last_delivery else 0) + 1
 
-            out_data.append({'d_w_id': line[0],
-                             'd_id'  : line[1],
+            out_data.append({'d_w_id': int(line[0]),
+                             'd_id'  : int(line[1]),
                              'd_next_undelivered_id': next_undelivered_id});
         json.dump(out_data, out_file)
 
@@ -323,7 +324,7 @@ class CSVToJSON:
             if o_carrier_id > 0:
                 key = self.JOIN_CH.join((o_w_id, o_d_id))
                 last_delivery = self.map_last_delivery[key] if key in self.map_last_delivery else 0
-                self.map_last_delivery[key] = max(last_delivery, o_carrier_id)
+                self.map_last_delivery[key] = max(last_delivery, int(line[2]))
 
 
     def execute(self):
@@ -345,11 +346,11 @@ class CSVToJSON:
                 open(self.OUT_ITEM_FILE_PATH, "w"))
         # Reset outfile before writing, Append each order to the file so that we don't have
         # to store in memory
-        #open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "w").close()
-        #self.load_order_orderline_data(
-               #open(self.ORDER_FILE_PATH),
-               #open(self.ORDER_LINE_FILE_PATH),
-               #open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "a"))
+        open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "w").close()
+        self.load_order_orderline_data(
+               open(self.ORDER_FILE_PATH),
+               open(self.ORDER_LINE_FILE_PATH),
+               open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "a"))
         self.extract_last_delivery(open(self.ORDER_FILE_PATH, "r"))
         self.load_stock_data(
                 open(self.STOCK_FILE_PATH, "r"),
