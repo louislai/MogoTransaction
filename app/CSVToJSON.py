@@ -79,6 +79,34 @@ class CSVToJSON:
                              'd_ytd'     : line[9]})
         json.dump(out_data, out_file)
 
+    @timemeasure
+    def load_customer_data(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            out_data.append({'c_w_id'        : line[0],
+                             'c_d_id'        : line[1],
+                             'c_id'          : line[2],
+                             'c_first'       : line[3],
+                             'c_middle'      : line[4],
+                             'c_last'        : line[5],
+                             'c_street_1'    : line[6],
+                             'c_street_2'    : line[7],
+                             'c_city'        : line[8],
+                             'c_state'       : line[9],
+                             'c_zip'         : line[10],
+                             'c_phone'       : line[11],
+                             'c_since'       : line[12],
+                             'c_credit'      : line[13],
+                             'c_credit_lim'  : line[14],
+                             'c_discount'    : line[15],
+                             'c_balance'     : line[16],
+                             'c_ytd_payment' : line[17],
+                             'c_payment_cnt' : line[18],
+                             'c_delivery_cnt': line[19],
+                             'c_data'        : line[20]});
+        json.dump(out_data, out_file)
+
     def execute(self):
         # Initialize map for denormalizing tables
 
@@ -88,6 +116,9 @@ class CSVToJSON:
         self.load_district_data(
                 open(self.DISTRICT_FILE_PATH),
                 open(self.OUT_DISTRICT_FILE_PATH, "w"))
+        self.load_customer_data(
+                open(self.CUSTOMER_FILE_PATH),
+                open(self.OUT_CUSTOMER_FILE_PATH, "w"))
     
 
 if __name__ == '__main__':
