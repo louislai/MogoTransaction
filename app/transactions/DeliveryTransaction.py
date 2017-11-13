@@ -12,33 +12,28 @@ class DeliveryTransaction(Transaction):
         carrier_id = int(params['carrier_id'])
 
         # Prepared Statements
-        # self.get_smallest_order_number_query = self.session.prepare('select o_id, o_c_id from order_ where o_w_id = {} '
-        #                                                             'and o_d_id = ?'
-        #                                                             'and o_carrier_id = -1 limit 1 allow filtering'
-        #                                                             .format(w_id))
-        self.get_smallest_order_number_query = self.session.prepare('select d_next_smallest_o_id from '
-                                                                    'district_next_smallest_order_id where d_w_id = {} '
-                                                                    'and d_id = ?'.format(w_id))
-        increment_smallest_order = self.session.prepare('update district_next_smallest_order_id '
-                                                        'set d_next_smallest_o_id = ? where d_w_id = ? '
-                                                        'and d_id = ?')
-        self.get_customer_id_query = self.session.prepare('select o_c_id from order_ where o_w_id = {} '
-                                                          'and o_d_id = ? and o_id = ?'.format(w_id))
-        self.update_order_query = self.session.prepare('update order_ set o_carrier_id = ? where o_id = ? '
-                                                       'and o_w_id = {} and o_d_id = ?'.format(w_id))
-        self.get_order_line_number_query = self.session.prepare('select ol_number, ol_amount from order_line where '
-                                                                'ol_o_id = ? and ol_w_id = {} and ol_d_id = ?'
-                                                                .format(w_id))
-        self.update_order_line_query = self.session.prepare('update order_line set ol_delivery_d = ? where ol_o_id = ? '
-                                                            'and ol_w_id = {} and ol_d_id = ? and ol_number = ?'
-                                                            .format(w_id))
-        self.get_customer_balance_delivery_query = self.session.prepare('select c_balance, c_delivery_cnt '
-                                                                        'from customer where c_id = ? and c_w_id = {} '
-                                                                        'and c_d_id = ?'.format(w_id))
-        self.update_customer_balance_delivery_query = self.session.prepare('update customer set c_balance = ?,'
-                                                                           'c_delivery_cnt = ? '
-                                                                           'where c_id = ? and c_w_id = {} '
-                                                                           'and c_d_id = ?'.format(w_id))
+        self.get_smallest_order_number_query = self.session.prepare('db.district.find({d_w_id: "{}", '
+                                                                    'd_id: "?"}, { d_smallest_o_id: 1, _id: 0 })'.format(w_id))
+        increment_smallest_order = self.session.prepare('db.district.update_one({d_w_id: "?", d_id: "?"}, '
+                                                        '{$set:{ d_smallest_o_id: "?"}})')
+        self.get_customer_id_query = self.session.prepare('db.order_orderline.find({o_w_id: "{}", o_d_id: "?", '
+                                                          'o_id: "?"}, {o_c_id: 1, _id: 0 })'.format(w_id))
+        self.update_order_query = self.session.prepare('db.order_orderline.update_one({o_id: "?", o_w_id: "{}", '
+                                                       'o_d_id: "?"}, {$set:{o_carrier_id: "?"}})'.format(w_id))
+        self.get_order_line_number_query = self.session.prepare('db.order_orderline.find({orderline.ol_o_id: "?", '
+                                                                'oderline.ol_w_id: "{}", orderline.ol_d_id: "?"}, '
+                                                                '{orderline.ol_number: 1, orderline.ol_amount: 1, '
+                                                                '_id: 0})'.format(w_id))
+        self.update_order_line_query = self.session.prepare('db.order_orderline.update_one({orderline.ol_o_id: "?", '
+                                                            'orderline.ol_w_id: "{}", orderline.ol_d_id: "?", '
+                                                            'orderline.ol_number: "?"}, '
+                                                            '{$set:{orderline.ol_delivery_d: "?"}})'.format(w_id))
+        self.get_customer_balance_delivery_query = self.session.prepare('db.customer.find({c_id: "?", c_w_id: "{}", '
+                                                                        'c_d_id: "?"}, {c_balance: 1, '
+                                                                        'c_delivery_cnt: 1, _id: 1})'.format(w_id))
+        self.update_customer_balance_delivery_query = self.session.prepare('db.customer.update_one({c_id: "?", c_w_id: "{}", '
+                                                                           'c_d_id: "?"}, {$set:{c_balance: "?", '
+                                                                           'c_delivery_cnt: "?"}})'.format(w_id))
 
         for num in range(1, 11):
             # order_info = self.get_smallest_order_number(num)
