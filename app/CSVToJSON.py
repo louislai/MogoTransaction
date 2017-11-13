@@ -46,6 +46,7 @@ class CSVToJSON:
             print "%s finished in %s s" % (original_function.__name__, timer.get_last())
         return new_function
 
+
     @timemeasure
     def load_warehouse_data(self, csv_file, out_file):
         reader = csv.reader(csv_file)
@@ -58,8 +59,25 @@ class CSVToJSON:
                              'w_city'    : line[4],
                              'w_state'   : line[5],
                              'w_zip'     : line[6],
-                             'w_ytd'     : line[8]});
-        json.dump(out_data, out_file);
+                             'w_ytd'     : line[8]})
+        json.dump(out_data, out_file)
+
+
+    @timemeasure
+    def load_district_data(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            out_data.append({'d_w_id'    : line[0],
+                             'd_id'      : line[1],
+                             'd_name'    : line[2],
+                             'd_street_1': line[3],
+                             'd_street_2': line[4],
+                             'd_city'    : line[5],
+                             'd_state'   : line[6],
+                             'd_zip'     : line[7],
+                             'd_ytd'     : line[9]})
+        json.dump(out_data, out_file)
 
     def execute(self):
         # Initialize map for denormalizing tables
@@ -67,6 +85,9 @@ class CSVToJSON:
         self.load_warehouse_data(
                 open(self.WAREHOUSE_FILE_PATH),
                 open(self.OUT_WAREHOUSE_FILE_PATH, "w"))
+        self.load_district_data(
+                open(self.DISTRICT_FILE_PATH),
+                open(self.OUT_DISTRICT_FILE_PATH, "w"))
     
 
 if __name__ == '__main__':
