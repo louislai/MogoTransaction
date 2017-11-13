@@ -126,8 +126,8 @@ class CSVToJSON:
                              'i_im_id': line[3],
                              'i_data' : line[4]})
             # Store i_name for order_order_line
-            i_id, i_name = line[0], line[1]
-            self.i_map[i_id] = i_name
+            i_id, i_name, i_price = line[0], line[1], line[2]
+            self.i_map[i_id] = (i_name, i_price)
         json.dump(out_data, out_file)
 
 
@@ -211,13 +211,45 @@ class CSVToJSON:
                 del order_line_obj['ol_delivery_d']
 
                 ol_i_id = order_line_obj['ol_i_id']
-                order_line_obj['i_name'] = self.i_map[ol_i_id]
+                order_line_obj['i_name'], i_price = self.i_map[ol_i_id]
                 obj['o_orderlines'].append(order_line_obj)
 
             json.dump(obj, out_file)
 
         # Closing list bracket
         out_file.write("]");
+
+    """
+        Loads stock data
+    """
+    @timemeasure
+    def load_stock_data(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            s_i_id = line[1]
+            i_name, i_price = self.i_map[s_i_id]
+
+            out_data.append({'s_w_id'      : line[0],
+                             's_i_id'      : line[2],
+                             's_quantity'  : line[3],
+                             's_ytd'       : line[4],
+                             's_order_cnt' : line[5],
+                             's_remote_cnt': line[6],
+                             's_dist_01'   : line[7],
+                             's_dist_02'   : line[8],
+                             's_dist_03'   : line[9],
+                             's_dist_04'   : line[10],
+                             's_dist_05'   : line[11],
+                             's_dist_06'   : line[12],
+                             's_dist_07'   : line[13],
+                             's_dist_08'   : line[14],
+                             's_dist_09'   : line[15],
+                             's_dist_10'   : line[16],
+                             's_i_name'    : i_name,
+                             's_i_price'   : i_price})
+        json.dump(out_data, out_file)
+
 
 
     def execute(self):
@@ -226,24 +258,27 @@ class CSVToJSON:
         self.order_line_queue = deque()
 
         self.load_warehouse_data(
-                open(self.WAREHOUSE_FILE_PATH),
+                open(self.WAREHOUSE_FILE_PATH, "r"),
                 open(self.OUT_WAREHOUSE_FILE_PATH, "w"))
         self.load_district_data(
-                open(self.DISTRICT_FILE_PATH),
+                open(self.DISTRICT_FILE_PATH, "r"),
                 open(self.OUT_DISTRICT_FILE_PATH, "w"))
         self.load_customer_data(
-                open(self.CUSTOMER_FILE_PATH),
+                open(self.CUSTOMER_FILE_PATH, "r"),
                 open(self.OUT_CUSTOMER_FILE_PATH, "w"))
         self.load_item_data(
-                open(self.ITEM_FILE_PATH),
+                open(self.ITEM_FILE_PATH, "r"),
                 open(self.OUT_ITEM_FILE_PATH, "w"))
         # Reset outfile before writing, Append each order to the file so that we don't have
         # to store in memory
-        open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "w").close()
-        self.load_order_orderline_data(
-               open(self.ORDER_FILE_PATH),
-               open(self.ORDER_LINE_FILE_PATH),
-               open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "a"))
+        #open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "w").close()
+        #self.load_order_orderline_data(
+               #open(self.ORDER_FILE_PATH),
+               #open(self.ORDER_LINE_FILE_PATH),
+               #open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "a"))
+        self.load_stock_data(
+                open(self.STOCK_FILE_PATH, "r"),
+                open(self.OUT_STOCK_FILE_PATH, "w"))
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
