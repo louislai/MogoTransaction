@@ -35,8 +35,9 @@ class CSVToJSON:
         self.OUT_STOCK_FILE_PATH      = self.OUT_DIR + "/stock.json"
         self.OUT_WAREHOUSE_TAX_FILE_PATH = self.OUT_DIR + "/warehouse-tax.json"
         self.OUT_DISTRICT_NEXT_ORDER_ID  = self.OUT_DIR + "/district-next-order-id.json"
-        self.OUT_DISTRICT_NEXT_SMALLEST_ORDER_ID_DATA =           \
-            self.OUT_DIR + "/district-next-smallest-order-id.json"
+        self.OUT_DISTRICT_TAX_DATA  = self.OUT_DIR + "/district-tax-data.json"
+        self.OUT_DISTRICT_NEXT_UNDELIVERED_ID =                 \
+            self.OUT_DIR + "/district-next-undelivered-id.json"
 
 
     def timemeasure(original_function):
@@ -182,6 +183,7 @@ class CSVToJSON:
             line = line[:-1]
             line = line.split(self.SEPARATOR)
 
+            # Extarct c_first, c_middle, c_last
             o_w_id, o_d_id, o_id, o_c_id = line[0], line[1], line[2], line[3]
             c_first, c_middle, c_last = self.c_map[self.JOIN_CH.join([o_w_id, o_d_id, o_c_id])]
 
@@ -207,9 +209,11 @@ class CSVToJSON:
                 if not order_line_obj:
                     break;
 
+                # Extract ol_delivery_d
                 obj['o_delivery_d'] = order_line_obj['ol_delivery_d']
                 del order_line_obj['ol_delivery_d']
 
+                # Add to orderlines
                 ol_i_id = order_line_obj['ol_i_id']
                 order_line_obj['i_name'], i_price = self.i_map[ol_i_id]
                 obj['o_orderlines'].append(order_line_obj)
@@ -251,10 +255,80 @@ class CSVToJSON:
         json.dump(out_data, out_file)
 
 
+    """
+        Loads district next order id data
+    """
+    @timemeasure
+    def load_district_next_order_id_data(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            out_data.append({'d_w_id'     : line[0],
+                             'd_id'       : line[1],
+                             'd_next_o_id': line[10]})
+        json.dump(out_data, out_file)
+
+
+    """
+        Loads warehouse tax data
+    """
+    @timemeasure
+    def load_warehouse_tax_data(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            out_data.append({'w_id': line[0],
+                             'w_tax': line[7]})
+        json.dump(out_data, out_file)
+        
+
+    """
+        Loads district next order id data
+    """
+    @timemeasure
+    def load_district_tax_data(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            out_data.append({'d_w_id': line[0],
+                             'd_id'  : line[1],
+                             'd_tax' : line[8]})
+        json.dump(out_data, out_file)
+
+
+    """
+        Load district_undelivered_id data
+    """
+    @timemeasure
+    def load_district_next_undelivered_id(self, csv_file, out_file):
+        reader = csv.reader(csv_file)
+        out_data = []
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            d_w_id, d_id = line[0], line[1]
+            key = self.JOIN_CH.join((d_w_id, d_id))
+            next_undelivered_id = (self.map_last_delivery[key] if key in self.map_last_delivery else 0) + 1
+
+            out_data.append({'d_w_id': line[0],
+                             'd_id'  : line[1],
+                             'd_next_undelivered_id': next_undelivered_id});
+        json.dump(out_data, out_file)
+
+
+    @timemeasure
+    def extract_last_delivery(self, csv_file):
+        reader = csv.reader(csv_file)
+        for line in itertools.islice(reader, self.ROW_COUNT):
+            # Extract data for other methods
+            o_w_id, o_d_id, o_carrier_id = line[0], line[1], int(line[4])
+            if o_carrier_id > 0:
+                key = self.JOIN_CH.join((o_w_id, o_d_id))
+                last_delivery = self.map_last_delivery[key] if key in self.map_last_delivery else 0
+                self.map_last_delivery[key] = max(last_delivery, o_carrier_id)
+
 
     def execute(self):
         # Initialize map for denormalizing tables
-        self.i_map, self.c_map = {}, {}
+        self.i_map, self.c_map, self.map_last_delivery = {}, {}, {}
         self.order_line_queue = deque()
 
         self.load_warehouse_data(
@@ -276,9 +350,22 @@ class CSVToJSON:
                #open(self.ORDER_FILE_PATH),
                #open(self.ORDER_LINE_FILE_PATH),
                #open(self.OUT_ORDER_ORDER_LINE_FILE_PATH, "a"))
+        self.extract_last_delivery(open(self.ORDER_FILE_PATH, "r"))
         self.load_stock_data(
                 open(self.STOCK_FILE_PATH, "r"),
                 open(self.OUT_STOCK_FILE_PATH, "w"))
+        self.load_district_next_order_id_data(
+                open(self.DISTRICT_FILE_PATH, "r"),
+                open(self.OUT_DISTRICT_NEXT_ORDER_ID, "w"))
+        self.load_warehouse_tax_data(
+                open(self.WAREHOUSE_FILE_PATH),
+                open(self.OUT_WAREHOUSE_TAX_FILE_PATH, "w"))
+        self.load_district_tax_data(
+                open(self.DISTRICT_FILE_PATH, "r"),
+                open(self.OUT_DISTRICT_TAX_DATA, "w"))
+        self.load_district_next_undelivered_id(
+                open(self.DISTRICT_FILE_PATH, "r"),
+                open(self.OUT_DISTRICT_NEXT_UNDELIVERED_ID, "w"))
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
