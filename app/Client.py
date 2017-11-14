@@ -4,6 +4,8 @@ import traceback
 from StatsCollector import StatsCollector
 from Parser import Parser
 from pymongo import MongoClient
+from pymongo.read_concern import ReadConcern
+from pymongo.write_concern import WriteConcern
 from transactions.DummyTransaction import DummyTransaction
 from transactions.NewOrderTransaction import NewOrderTransaction
 from transactions.PaymentTransaction import PaymentTransaction
@@ -13,8 +15,14 @@ from transactions.PopularItemTransaction import PopularItemTransaction
 from transactions.StockLevelTransaction import StockLevelTransaction
 from transactions.TopBalanceTransaction import TopBalanceTransaction
 
-# Consistency level: ONE = 1, QUORUM = 4
-DEFAULT_CONSISTENCY_LEVEL = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+# Consistency level: 1 / not supplied for "local" for the read_concern & "1" for write concern
+# not-1 for "majority" for both read and write concerns
+if len(sys.argv) > 1 and int (sys.argv[1]) == 1:
+    read_concern = ReadConcern("local")
+    write_concern = WriteConcern("1")
+else:
+    read_concern = ReadConcern("majority")
+    write_concern = WriteConcern("majority")
 
 class Client:
 
@@ -37,7 +45,7 @@ class Client:
         #     transaction = PaymentTransaction(session)
         #
         # elif transaction_type == Parser.DELIVERY:
-        #     transaction = DeliveryTransaction(session)
+        #     transaction = DeliveryTransaction(session)fr
         #
         # elif transaction_type == Parser.ORDER_STATUS:
         #     transaction = OrderStatusTransaction(session)
@@ -65,7 +73,7 @@ class Client:
     def execute(self):
         # Connect to mongodb server
         client = MongoClient('localhost', 21100)
-        session = client.cs4224
+        session = client.get_database("cs4224", read_concern=read_concern, write_concern=write_concern)
 
         # Reading transactions line by line, parsing and execute
         while True:
