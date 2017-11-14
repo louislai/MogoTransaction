@@ -63,7 +63,9 @@ class CSVToJSON:
                              'w_state'   : line[5],
                              'w_zip'     : line[6],
                              'w_ytd'     : float(line[8])})
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     @timemeasure
@@ -80,7 +82,9 @@ class CSVToJSON:
                              'd_state'   : line[6],
                              'd_zip'     : line[7],
                              'd_ytd'     : float(line[9])})
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     @timemeasure
@@ -113,7 +117,9 @@ class CSVToJSON:
                     line[0], line[1], line[2], line[3], line[4], line[5]
             self.c_map[self.JOIN_CH.join([c_w_id, c_d_id, c_id])] = (c_first, c_middle, c_last)
 
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     @timemeasure
@@ -129,7 +135,9 @@ class CSVToJSON:
             # Store i_name for order_order_line
             i_id, i_name, i_price = line[0], line[1], line[2]
             self.i_map[i_id] = (i_name, i_price)
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     def read_another_orderline(self, current_order, order_line_file):
@@ -167,8 +175,6 @@ class CSVToJSON:
 
     @timemeasure
     def load_order_orderline_data(self, order_file, order_line_file, out_file):
-        # Opening list bracket
-        out_file.write("[");
 
         # Assume that order_file is sorted in ascending order of (w_id, d_id, o_id)
         # Assume that order_line_file is sorted in ascending order of (w_id, d_id, o_id, o_number)
@@ -219,9 +225,7 @@ class CSVToJSON:
                 obj['o_orderlines'].append(order_line_obj)
 
             json.dump(obj, out_file)
-
-        # Closing list bracket
-        out_file.write("]");
+            out_file.write('\n')
 
     """
         Loads stock data
@@ -253,7 +257,9 @@ class CSVToJSON:
                              's_data'      : line[16],
                              's_i_name'    : i_name,
                              's_i_price'   : float(i_price)})
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     """
@@ -267,7 +273,9 @@ class CSVToJSON:
             out_data.append({'d_w_id'     : int(line[0]),
                              'd_id'       : int(line[1]),
                              'd_next_o_id': int(line[10])})
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     """
@@ -280,7 +288,9 @@ class CSVToJSON:
         for line in itertools.islice(reader, self.ROW_COUNT):
             out_data.append({'w_id' : int(line[0]),
                              'w_tax': float(line[7])})
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
         
 
     """
@@ -294,7 +304,9 @@ class CSVToJSON:
             out_data.append({'d_w_id': int(line[0]),
                              'd_id'  : int(line[1]),
                              'd_tax' : float(line[8])})
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     """
@@ -312,7 +324,9 @@ class CSVToJSON:
             out_data.append({'d_w_id': int(line[0]),
                              'd_id'  : int(line[1]),
                              'd_next_undelivered_id': next_undelivered_id});
-        json.dump(out_data, out_file)
+        for row in out_data:
+            json.dump(row, out_file)
+            out_file.write('\n')
 
 
     @timemeasure
