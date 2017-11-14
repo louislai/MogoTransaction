@@ -44,7 +44,7 @@ class TestGen:
     ORDER_LINE = DIRECTORY + "/order-line.csv"
     STOCK = DIRECTORY + "/stock.csv"
 
-    N_WAREHOUSE = 10
+    N_WAREHOUSE = 16
     N_DISTRICT_PER_W = 10
     N_CUSTOMER_PER_D = 10
     N_ORDER_PER_D = 50

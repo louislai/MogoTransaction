@@ -156,3 +156,5 @@ venv.bak/
 
 # Ignore data file
 4224-project-files/
+data/
+test_data/
