@@ -11,6 +11,8 @@ if [ ! -d "4224-project-files" ]; then
     cp replacenull.sh 4224-project-files/data-files/
     cd 4224-project-files/data-files
     ./replacenull.sh
+    sort -t, -k1,1n -k2,2n -k3,3n order.csv -o order.csv
+    sort -t, -k1,1n -k2,2n -k3,3n order-line.csv -o order-line.csv
     echo "Done replacing null values"
     cd ../../
 else
