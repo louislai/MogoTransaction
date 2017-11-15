@@ -10,9 +10,10 @@ class Transaction:
      Get next order id for a particular (warehouse_id, district_id) key
     """
     def get_next_order_id(self, w_id, d_id):
-        result = self.session\
-            .execute('SELECT d_next_o_id FROM district_next_order_id WHERE d_w_id = {} AND d_id = {}'.format(w_id, d_id))
-        return int(result[0].d_next_o_id)
+        result = self.session['district-next-order-id']\
+            .find_one({ 'd_w_id': w_id, 'd_id': d_id }, { '_id': 0, 'd_next_o_id': 1 })['d_next_o_id']
+
+        return int(result)
 
     """
     Get customer info with warehouse, district id

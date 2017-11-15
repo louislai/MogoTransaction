@@ -50,19 +50,18 @@ class Client:
         # elif transaction_type == Parser.ORDER_STATUS:
         #     transaction = OrderStatusTransaction(session)
         #
-        # elif transaction_type == Parser.STOCK_LEVEL:
-        #     transaction = StockLevelTransaction(session)
+        if transaction_type == Parser.STOCK_LEVEL:
+            transaction = StockLevelTransaction(session)
 
-        if transaction_type == Parser.POPULAR_ITEM:
+        elif transaction_type == Parser.POPULAR_ITEM:
             transaction = PopularItemTransaction(session)
-        else:
-            return
-        #
         # elif transaction_type == Parser.TOP_BALANCE:
         #     transaction = TopBalanceTransaction(session)
         #
         # elif transaction_type == Parser.ORDER_LINE:
         #     pass
+        else:
+            return
 
         try:
             transaction.execute(transaction_params)

@@ -18,23 +18,23 @@ class StockLevelTransaction(Transaction):
      Get the item ids belonging to the last l orders of a (warehouse id, district id)
     """
     def get_last_l_item_ids(self, w_id, d_id, next_order_id, num_last_orders):
-        results = self.session.execute('SELECT ol_i_id from order_line'
-                                  ' WHERE ol_w_id = {} AND ol_d_id = {} AND ol_o_id >= {}'
-                                  .format(w_id, d_id, next_order_id - num_last_orders))
-        return set(map(lambda result: int(result.ol_i_id), results))
+        results = self.session['order-order-line']\
+            .find({ 'o_w_id': w_id, 'o_d_id': d_id, 'o_id': { '$gte': next_order_id - num_last_orders }},
+                  { 'o_orderlines.ol_i_id': 1, '_id': 0 })
+        results = [int(ol['ol_i_id']) for order in results for ol in order['o_orderlines']]
+        return set(results)
 
     """int: count
      From a given set of item ids, count the number of items that is 
      below a given threshold for a particular warehouse id
     """
     def count_items_below_threshold(self, w_id, item_ids, threshold):
-        prepared_query = self.session.prepare('SELECT s_quantity FROM stock WHERE s_w_id = {} AND s_i_id = ?'.format(w_id))
 
         count = 0
 
         for item_id in item_ids:
-            bound_query = prepared_query.bind([item_id])
-            result = self.session.execute(bound_query)
-            count += 1 if int(result[0].s_quantity) < threshold else 0
+            result = self.session['stock'].find_one({ 's_w_id': 1, 's_i_id': 1 }, { '_id': 0, 's_quantity': 1 })['s_quantity']
+            result = int(result)
+            count += 1 if result < threshold else 0
 
         return count

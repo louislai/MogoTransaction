@@ -218,6 +218,9 @@ class CSVToJSON:
                 # Extract ol_delivery_d
                 obj['o_delivery_d'] = order_line_obj['ol_delivery_d']
                 del order_line_obj['ol_delivery_d']
+                del order_line_obj['ol_w_id']
+                del order_line_obj['ol_d_id']
+                del order_line_obj['ol_o_id']
 
                 # Add to orderlines
                 ol_i_id = order_line_obj['ol_i_id']
