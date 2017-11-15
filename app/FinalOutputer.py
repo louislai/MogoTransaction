@@ -1,4 +1,4 @@
-from cassandra.cluster import Cluster
+from pymongo import MongoClient
 from transactions.DatabaseStateTransaction import DatabaseStateTransaction
 
 class FinalOutputer:
@@ -6,10 +6,8 @@ class FinalOutputer:
     """ Print out final db states
     """
     def output(self):
-        # Connect to cassandra server
-        cluster = Cluster()
-        session = cluster.connect('cs4224')
-        session.execute.im_self.default_timeout = 1000000000000000
+        client = MongoClient('localhost', 21100)
+        session = client.cs4224
 
         transaction = DatabaseStateTransaction(session)
         transaction.execute({})

@@ -6,15 +6,24 @@ class DatabaseStateTransaction(Transaction):
 
         print '--------------------------------------------------------------------------------------------------'
         print 'Final Database State'
-        print 'sum(w_ytd) from warehouse', join_cast_str(self.session.execute('select sum(w_ytd) from warehouse')[0])
+        print list(self.session['warehouse'].aggregate([{ '$group': { '_id': None, 'total': { '$sum': '$w_ytd' }}}]))[0]['total']
         print 'sum(d_ytd), sum(d_next_o_id) from district', \
-            join_cast_str(self.session.execute('select sum(d_ytd) from district')[0]), \
-            join_cast_str(self.session.execute('select sum(d_next_o_id) from district_next_order_id')[0])
-        print 'sum(c_balance), sum(c_ytd_payment), sum(c_payment_cnt), sum(c_delivery_cnt) from customer', \
-            join_cast_str(self.session.execute('select sum(c_balance), sum(c_ytd_payment), '
-                                 ' sum(c_payment_cnt), sum(c_delivery_cnt) from customer')[0])
-        print 'max(o_id), sum(o_ol_cnt) from order_', \
-            join_cast_str(self.session.execute('select max(o_id), sum(o_ol_cnt) from order_')[0])
+            list(self.session['district'].aggregate([{'$group': {'_id': None, 'total': {'$sum': '$d_ytd'}}}]))[0]['total'],\
+            list(self.session['district-next-order-id'].aggregate([{'$group': {'_id': None, 'total': {'$sum': '$d_next_o_id'}}}]))[0]['total']
+        customer_result = list(self.session['customer']\
+                               .aggregate([{ '$group': { '_id': None,
+                                                         'c_balance': { '$sum': '$c_balance' },
+                                                         'c_ytd_payment': { '$sum': '$c_ytd_payment' },
+                                                         'c_payment_cnt': { '$sum': '$c_payment_cnt' },
+                                                         'c_delivery_cnt': { '$sum': 'c_delivery_cnt' }}}]))[0]
+
+        print 'sum(c_balance), sum(c_ytd_payment), sum(c_payment_cnt), sum(c_delivery_cnt) from customer',\
+            customer_result['c_balance'], customer_result['c_ytd_payment'], customer_result['c_payment_cnt'],\
+            customer_result['c_delivery_cnt']
+
+        order_max_result = list(self.session['order-order-line']\
+                                .aggregate([{ '$group': { '_id': None, 'o_id': { '$max': '$o_id' }, 'o_ol_cnt': { '$max': '$o_ol_cnt' }}}]))[0]
+        print 'max(o_id), sum(o_ol_cnt) from order_', order_max_result['o_id'], order_max_result['o_ol_cnt']
         print 'sum(ol_amount), sum(ol_quantity) from order_line', \
             join_cast_str(self.get_orderline_stat())
         print 'sum(s_quantity), sum(s_ytd), sum(s_order_cnt), sum(s_remote_cnt) from stock', \
@@ -26,11 +35,16 @@ class DatabaseStateTransaction(Transaction):
         ol_quantity = 0
         for w_id in range(1, 17):
             for d_id in range(1, 11):
-                query = 'select sum(ol_amount), sum(ol_quantity) from order_line' \
-                        ' where ol_w_id = {} and ol_d_id = {}'.format(w_id, d_id)
-                result = list(self.session.execute(query))[0]
-                ol_amount += int(result[0])
-                ol_quantity += int(result[1])
+                result = list(self.session['order-order-line']\
+                              .aggregate([{ '$match': { 'o_w_id': w_id, 'o_d_id': d_id }},
+                                          { '$unwind': '$o_orderlines' },
+                                          { '$group': { '_id': None, 'ol_amount': { '$sum': '$o_orderlines.ol_amount' },
+                                                        'ol_quantity': { '$sum': '$o_orderlines.ol_quantity' }}}]))
+                if not result:
+                    continue
+                result = result[0]
+                ol_quantity += int(result['ol_quantity'])
+                ol_amount += int(result['ol_amount'])
         return ol_amount, ol_quantity
 
 
@@ -40,11 +54,17 @@ class DatabaseStateTransaction(Transaction):
         s_order_cnt = 0
         s_remote_cnt = 0
         for w_id in range(1, 17):
-            query = 'select sum(s_quantity), sum(s_ytd), sum(s_order_cnt), sum(s_remote_cnt) from stock' \
-                    ' where s_w_id = {}'.format(w_id)
-            result = list(self.session.execute(query))[0]
-            s_quantity += int(result[0])
-            s_ytd += int(result[1])
-            s_order_cnt += int(result[2])
-            s_remote_cnt += int(result[3])
+            result = list(self.session['stock'].\
+                         aggregate([{ '$match': { 's_w_id': w_id }},
+                                    { '$group': { '_id': None, 's_order_cnt': { '$sum': '$s_order_cnt' },
+                                                  's_remote_cnt': { '$sum': '$s_remote_cnt' },
+                                                  's_ytd': { '$sum': '$s_ytd' },
+                                                  's_quantity': { '$sum': '$s_quantity' }}}]))
+            if not result:
+                continue
+            result = result[0]
+            s_quantity += int(result['s_quantity'])
+            s_ytd += int(result['s_ytd'])
+            s_order_cnt += int(result['s_order_cnt'])
+            s_remote_cnt += int(result['s_remote_cnt'])
         return s_quantity, s_ytd, s_order_cnt, s_remote_cnt
