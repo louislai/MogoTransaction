@@ -40,27 +40,55 @@ class OrderStatusTransaction(Transaction):
 
     # Get the customer info using C_ID
     def get_customer_info(self, c_w_id, c_d_id, c_id):
-        result = self.session['customer'].find({'c_w_id': c_w_id, 'c_d_id': c_d_id, 'c_id': c_id},
+        results = self.session['customer'].find({'c_w_id': c_w_id, 'c_d_id': c_d_id, 'c_id': c_id},
                                                {'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_balance': 1, '_id': 0})
+        results = list(results)
 
-        if not result:
+        def get_info(doc):
+            d = {'c_first': doc['c_first'],
+                 'c_middle': doc['c_middle'],
+                 'c_last': doc['c_last'],
+                 'c_balance': doc['c_balance']}
+            return self.objectify(d)
+
+        customer_info = [get_info(doc) for doc in results]
+        if not customer_info:
             print('Cannot find customer with w_id {} d_id {} c_id {}'.format(c_w_id, c_d_id, c_id))
             return
-        return result[0]
+        return customer_info[0]
 
     # Get the last order info from the customer
     def get_last_order(self, c_w_id, c_d_id, c_id):
-        result = self.session['order-order-line'].find({'o_w_id': c_w_id, 'o_d_id': c_d_id, 'o_c_id': c_id},
+        results = self.session['order-order-line'].find({'o_w_id': c_w_id, 'o_d_id': c_d_id, 'o_c_id': c_id},
                                                        {'o_id': 1, 'o_entry_d': 1, 'o_carrier_id': 1, '_id': 0})
-        return result[0]
+        results = list(results)
+
+        def get_info(doc):
+            d = {'o_id': doc['o_id'],
+                 'o_entry_d': doc['o_entry_d'],
+                 'o_carrier_id': doc['o_carrier_id']}
+            return self.objectify(d)
+
+        last_order_info = [get_info(doc) for doc in results]
+        return last_order_info[0]
 
     # Get info of each item in the latest order
     def get_order_line(self, c_w_id, c_d_id, o_id):
-
-        result = self.session['order-order-line'].find({'o_orderline.ol_w_id': c_w_id, 'o_orderline.ol_d_id': c_d_id, 'o_orderline.ol_o_id': o_id},
+        results = self.session['order-order-line'].find({'o_orderline.ol_w_id': c_w_id, 'o_orderline.ol_d_id': c_d_id, 'o_orderline.ol_o_id': o_id},
                                                        {'o_orderline.ol_i_id': 1, 'o_orderline.ol_supply_w_id': 1,
                                                         'o_orderline.ol_quanity': 1, 'o_orderline.ol_amount': 1,
                                                         'o_orderline.ol_delivery_d': 1, '_id': 0})
-        return result
+        results = list(results)
+
+        def get_info(doc):
+            d = {'o_orderline.ol_i_id': doc['o_orderline.ol_i_id'],
+                 'o_orderline.ol_supply_w_id': doc['o_orderline.ol_supply_w_id'],
+                 'o_orderline.ol_quanity': doc['o_orderline.ol_quanity'],
+                 'o_orderline.ol_amount': doc['o_orderline.ol_amount'],
+                 'o_orderline.ol_delivery_d': doc['o_orderline.ol_delivery_d']}
+            return self.objectify(d)
+
+        order_line_info = [get_info(doc) for doc in results]
+        return order_line_info
 
 
