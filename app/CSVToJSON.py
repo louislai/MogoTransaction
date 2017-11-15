@@ -221,7 +221,7 @@ class CSVToJSON:
 
                 # Add to orderlines
                 ol_i_id = order_line_obj['ol_i_id']
-                order_line_obj['i_name'], i_price = self.i_map[str(ol_i_id)]
+                order_line_obj['ol_i_name'], i_price = self.i_map[str(ol_i_id)]
                 obj['o_orderlines'].append(order_line_obj)
 
             json.dump(obj, out_file)

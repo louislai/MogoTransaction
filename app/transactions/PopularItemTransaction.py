@@ -7,8 +7,7 @@ class PopularItemTransaction(Transaction):
         d_id = int(params['d_id'])
         num_last_orders = int(params['l'])
 
-        last_l_orders = self.get_last_l_orders(w_id, d_id, num_last_orders)
-        orderlines_for_orders = self.get_orderlines_for_orders(w_id, d_id, last_l_orders)
+        last_l_orders, orderlines_for_orders = self.get_orderlines_for_orders(w_id, d_id, num_last_orders)
 
         if not orderlines_for_orders:
             print 'Cannot get any order lines'
@@ -25,32 +24,29 @@ class PopularItemTransaction(Transaction):
 
     """list((any, any, any, any, any, any)): list of last orders, where each order has o_id, o_entry, c_first,
         c_middle, c_last
-     Get the last num_last_orders orders belonging to a (warehouse_id, district_id) 
+        Return the list of order lines for each order
     """
-    def get_last_l_orders(self, w_id, d_id, num_last_orders):
-        results = self.session.execute('select o_id, o_entry_d, c_first, c_middle, c_last from order_'
-                                  ' where o_w_id = {} and o_d_id = {} order by o_id desc limit {}'
-                                  .format(w_id, d_id, num_last_orders))
-        return list(results)
+    def get_orderlines_for_orders(self, w_id, d_id, num_last_orders):
+        results = self.session['order-order-line'].find({'o_w_id': w_id, 'o_d_id': d_id},
+                                                       {'_id': 0, 'o_id': 1, 'o_entry_d': 1, 'o_c_first': 1,
+                                                        'o_c_middle': 1, 'o_c_last': 1, 'o_orderlines.ol_quantity': 1,
+                                                        'o_orderlines.ol_i_id': 1, 'o_orderlines.ol_i_name': 1})\
+            .sort('o_o_id', -1).limit(num_last_orders)
 
-    """list(list((any, any, any)): list of order lines for each order. Each orderline has ol_quantity, ol_i_id, ol_i_id, 
-        i_name
-     Return the list of order lines for each order in a list of order a particular warehouse id
-    """
-    def get_orderlines_for_orders(self, w_id, d_id, orders):
-        prepared_query = self.session.prepare('SELECT ol_quantity, ol_i_id, ol_i_id, i_name FROM order_line'
-                                              ' WHERE ol_w_id = {} AND ol_d_id = {}'
-                                              ' AND ol_o_id = ?'.format(w_id, d_id))
+        results = list(results)
+        def get_order(doc):
+            d = {
+                'o_id': doc['o_id'],
+                'o_entry_d': doc['o_entry_d'],
+                'c_first': doc['o_c_first'],
+                'c_middle': doc['o_c_middle'],
+                'c_last': doc['o_c_last']
+            }
+            return self.objectify(d)
+        last_orders = [get_order(doc) for doc in results]
+        orderlines_for_orders = [list(map(self.objectify, doc['o_orderlines'])) for doc in results]
+        return last_orders, orderlines_for_orders
 
-        orderlines_for_orders = []
-
-        for order in orders:
-            order_id = int(order.o_id)
-            bound_query = prepared_query.bind([order_id])
-            results = self.session.execute(bound_query)
-            orderlines_for_orders.append(list(results))
-
-        return orderlines_for_orders
 
     """list((set(int), int)): List of (set of pupular item, quantity) tuple
      Get the popular items and their quantity for each order, using the list of order lines for each order
@@ -70,7 +66,7 @@ class PopularItemTransaction(Transaction):
 
         for orderlines in orderlines_for_orders:
             for ol in orderlines:
-                item_id_name[int(ol.ol_i_id)] = ol.i_name
+                item_id_name[int(ol.ol_i_id)] = ol.ol_i_name
 
         return item_id_name
 

@@ -21,3 +21,13 @@ class Transaction:
         result = self.session.execute('select c_first, c_middle, c_last, c_balance from customer where'
                                       ' c_w_id = {}, c_d_id = {}, c_id = {}'.format(c_w_id, c_d_id, c_id))
         return result[0]
+
+    def objectify(self, d):
+        class obj(object):
+            def __init__(self, d):
+                for a, b in d.items():
+                    if isinstance(b, (list, tuple)):
+                        setattr(self, a, [obj(x) if isinstance(x, dict) else x for x in b])
+                    else:
+                        setattr(self, a, obj(b) if isinstance(b, dict) else b)
+        return obj(d)

@@ -18,11 +18,11 @@ from transactions.TopBalanceTransaction import TopBalanceTransaction
 # Consistency level: 1 / not supplied for "local" for the read_concern & "1" for write concern
 # not-1 for "majority" for both read and write concerns
 if len(sys.argv) > 1 and int (sys.argv[1]) == 1:
-    read_concern = ReadConcern("local")
-    write_concern = WriteConcern("1")
-else:
     read_concern = ReadConcern("majority")
     write_concern = WriteConcern("majority")
+else:
+    read_concern = ReadConcern("local")
+    write_concern = WriteConcern("1")
 
 class Client:
 
@@ -37,9 +37,9 @@ class Client:
     """
     def execute_transaction(self, session, transaction_type, transaction_params):
         transaction = DummyTransaction(session)
-        #
+
         # if transaction_type == Parser.NEW_ORDER:
-        #     transaction = NewOrderTransaction(session)
+        #     # transaction = NewOrderTransaction(session)
         #
         # elif transaction_type == Parser.PAYMENT:
         #     transaction = PaymentTransaction(session)
@@ -52,20 +52,22 @@ class Client:
         #
         # elif transaction_type == Parser.STOCK_LEVEL:
         #     transaction = StockLevelTransaction(session)
-        #
-        # elif transaction_type == Parser.POPULAR_ITEM:
-        #     transaction = PopularItemTransaction(session)
+
+        if transaction_type == Parser.POPULAR_ITEM:
+            transaction = PopularItemTransaction(session)
+        else:
+            return
         #
         # elif transaction_type == Parser.TOP_BALANCE:
         #     transaction = TopBalanceTransaction(session)
         #
         # elif transaction_type == Parser.ORDER_LINE:
         #     pass
-        #
+
         try:
             transaction.execute(transaction_params)
         except Exception:
-            print "Transaction could not be executed"#, traceback.format_exc()
+            print "Transaction could not be executed", traceback.format_exc()
 
 
     """ Initalize necessary objects, read and execute transaction.
