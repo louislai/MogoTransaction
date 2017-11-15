@@ -30,11 +30,6 @@ class StockLevelTransaction(Transaction):
     """
     def count_items_below_threshold(self, w_id, item_ids, threshold):
 
-        count = 0
-
-        for item_id in item_ids:
-            result = self.session['stock'].find_one({ 's_w_id': 1, 's_i_id': 1 }, { '_id': 0, 's_quantity': 1 })['s_quantity']
-            result = int(result)
-            count += 1 if result < threshold else 0
-
+        count = self.session['stock']\
+            .count({ 's_w_id': w_id, 's_i_id': { '$in': list(item_ids) }, 's_quantity': { '$lt': threshold }})
         return count
