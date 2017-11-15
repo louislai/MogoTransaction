@@ -25,9 +25,9 @@ class OrderStatusTransaction(Transaction):
 
         order_line = self.get_order_line(c_w_id, c_d_id, order_number)
 
-        print 'Customer Info: ', customer_name_first, customer_name_middle, customer_name_last,\
-            ' has balance of ', customer_balance
-        print 'Last order info: ', order_number, entry_date, carrier
+        print('Customer Info: ', customer_name_first, customer_name_middle, customer_name_last,\
+            ' has balance of ', customer_balance)
+        print('Last order info: ', order_number, entry_date, carrier)
 
         for index in order_line:
             # print 'what', index
@@ -36,7 +36,7 @@ class OrderStatusTransaction(Transaction):
             quantity = index.ol_quantity
             total_price = index.ol_amount
             date_time = index.ol_delivery_d
-            print 'Order-line info: ', item_number, supply_warehouse, quantity, total_price, date_time
+            print('Order-line info: ', item_number, supply_warehouse, quantity, total_price, date_time)
 
     # Get the customer info using C_ID
     def get_customer_info(self, c_w_id, c_d_id, c_id):
@@ -44,7 +44,7 @@ class OrderStatusTransaction(Transaction):
                                                {'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_balance': 1, '_id': 0})
 
         if not result:
-            print 'Cannot find customer with w_id {} d_id {} c_id {}'.format(c_w_id, c_d_id, c_id)
+            print('Cannot find customer with w_id {} d_id {} c_id {}'.format(c_w_id, c_d_id, c_id))
             return
         return result[0]
 
