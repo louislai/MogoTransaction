@@ -11,7 +11,7 @@ done
 for accId in `seq 0 4`; do
   acc=${acc_arr[accId]}
   if [ "$accId" -ge 0 ] && [ 2 -ge "$accId" ]; then
-    ssh $acc "source .bash_profile; mongod --fork --configsvr --directoryperdb --pidfilepath /temp/mongodb/pid --dbpath /temp/mongodb/data/cfgsvr --logpath /temp/mongodb/log/cfgsvr.log --replSet cfg --port 21000"
+    ssh $acc "source .bash_profile; mongod --storageEngine wiredTiger --enableMajorityReadConcern --fork --configsvr --directoryperdb --pidfilepath /temp/mongodb/pid --dbpath /temp/mongodb/data/cfgsvr --logpath /temp/mongodb/log/cfgsvr.log --replSet cfg --port 21000"
   fi 
 done
 
@@ -34,7 +34,7 @@ for shardId in `seq 0 4`; do
   port=$((21001 + $shardId))
   # Run shard mongod
   for repId in `seq 0 2`; do
-        echo "Running source .bash_profile; mongod --fork --shardsvr --directoryperdb --pidfilepath /temp/mongodb/pidshard${shardId} --dbpath /temp/mongodb/data/shard${shardId} --logpath /temp/mongodb/log/shard${shardId}.log --replSet shard${shardId} --port ${port}"
+        echo "Running source .bash_profile; mongod --storageEngine wiredTiger --enableMajorityReadConcern --fork --shardsvr --directoryperdb --pidfilepath /temp/mongodb/pidshard${shardId} --dbpath /temp/mongodb/data/shard${shardId} --logpath /temp/mongodb/log/shard${shardId}.log --replSet shard${shardId} --port ${port}"
         ssh ${acc_arr[$(( ($shardId + $repId) % 5 ))]} "source .bash_profile; mongod --fork --shardsvr --directoryperdb --pidfilepath /temp/mongodb/pidshard${shardId} --dbpath /temp/mongodb/data/shard${shardId} --logpath /temp/mongodb/log/shard${shardId}.log --replSet shard${shardId} --port ${port}"
   done
 
