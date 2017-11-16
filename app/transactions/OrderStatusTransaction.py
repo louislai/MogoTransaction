@@ -74,19 +74,18 @@ class OrderStatusTransaction(Transaction):
 
     # Get info of each item in the latest order
     def get_order_line(self, c_w_id, c_d_id, o_id):
-        results = self.session['order-order-line'].find({'o_orderline.ol_w_id': c_w_id, 'o_orderline.ol_d_id': c_d_id,
-                                                         'o_orderline.ol_o_id': o_id},
+        results = self.session['order-order-line'].find({'o_w_id': c_w_id, 'o_d_id': c_d_id, 'o_id': o_id},
                                                         {'o_orderline.ol_i_id': 1, 'o_orderline.ol_supply_w_id': 1,
                                                          'o_orderline.ol_quanity': 1, 'o_orderline.ol_amount': 1,
-                                                         'o_orderline.ol_delivery_d': 1, '_id': 0})
+                                                         'o_ol_delivery_d': 1, '_id': 0})
         results = list(results)
 
         def get_info(doc):
-            d = {'o_orderline.ol_i_id': doc['o_orderline.ol_i_id'],
-                 'o_orderline.ol_supply_w_id': doc['o_orderline.ol_supply_w_id'],
-                 'o_orderline.ol_quanity': doc['o_orderline.ol_quanity'],
-                 'o_orderline.ol_amount': doc['o_orderline.ol_amount'],
-                 'o_orderline.ol_delivery_d': doc['o_orderline.ol_delivery_d']}
+            d = {'ol_i_id': doc['o_orderline.ol_i_id'],
+                 'ol_supply_w_id': doc['o_orderline.ol_supply_w_id'],
+                 'ol_quanity': doc['o_orderline.ol_quanity'],
+                 'ol_amount': doc['o_orderline.ol_amount'],
+                 'o_ol_delivery_d': doc['o_ol_delivery_d']}
             return self.objectify(d)
 
         order_line_info = [get_info(doc) for doc in results]
