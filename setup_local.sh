@@ -9,3 +9,4 @@ rm -rf data
 mkdir data
 time python app/CSVToJSON.py -p test_data -o data/
 time ./load_data.sh
+time ./create_index.sh
