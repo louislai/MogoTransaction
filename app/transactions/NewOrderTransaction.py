@@ -22,42 +22,46 @@ class NewOrderTransaction(Transaction):
 		# processing steps (follow sequence in project.pdf)
 		next_o_id, d_tax = self.get_d_next_o_id_and_d_tax(w_id, d_id)
 		self.update_d_next_o_id(w_id, d_id, next_o_id+1)
-		entry_date = self.create_new_order(w_id, d_id, c_id, next_o_id, num_items, orders)
-		c_discount = Decimal(customer.c_discount)
+		entry_date = self.create_new_order(w_id, d_id, c_id, next_o_id, num_items, orders, customer)
+		c_discount = customer.c_discount
 		print_item_results, total_amount = self.update_stock_and_create_order_line(w_id, d_id, c_id, next_o_id, orders, d_tax, w_tax, c_discount)
 		self.print_output(w_id, d_id, c_id, customer, w_tax, d_tax, next_o_id, entry_date, num_items, total_amount)
 		self.print_items(print_item_results)
 
 	def get_w_tax(self, w_id):
 		"""Get warehouse tax from the vertical partition collection warehouse-tax"""
-		results = self.session['warehouse-tax'].find({'w_id': w_id},{'w_tax': 1})
-		if not results:
+		result = self.session['warehouse-tax'].find_one({'w_id': w_id},{ '_id': 0, 'w_tax': 1})
+		if not result:
 			print "Cannot find any warehouse with w_id {}".format(w_id)
 			return
 		else:
-			return Decimal(results[0].w_tax)
+			return result['w_tax']
 
 	def get_customer_for_output(self, w_id, d_id, c_id):
 		"""Get customer info (c_first, c_middle, c_last, c_credit, c_discount) for printing output"""
-		results = self.session['customer'].find({'c_w_id': w_id, 'c_d_id': d_id, 'c_id': c_id}, {'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_credit': 1, 'c_discount': 1})
-		if not results:
+		result = self.session['customer']\
+			.find_one({'c_w_id': w_id, 'c_d_id': d_id, 'c_id': c_id},
+					  {'c_first': 1, 'c_middle': 1, 'c_last': 1, '_id': 0,
+					   'c_credit': 1, 'c_discount': 1})
+		if not result:
 			print "Cannot find any customer with w_id d_id c_id {} {} {}".format(w_id, d_id, c_id)
 			return
 		else:
-			return results[0]
+			return self.objectify(result)
 
 	def get_d_next_o_id_and_d_tax(self, w_id, d_id):
 		"""Get d_next_o_id and d_tax from vertical partition district-next-order-id"""
-		results = self.session['district-next-order-id'].find({'d_w_id': w_id, 'd_id': d_id}, {'d_next_o_id': 1, 'd_tax': 1})
-		if not results:
+		result = self.session['district-next-order-id'].find_one({'d_w_id': w_id, 'd_id': d_id},
+															  { '_id': 0, 'd_next_o_id': 1, 'd_tax': 1})
+		if not result:
 			print "Cannot find any district with w_id d_id {} {}".format(w_id, d_id)
 			return
 		else:
-			return int(rows[0].d_next_o_id), Decimal(rows[0].d_tax)
+			return result['d_next_o_id'], result['d_tax']
 
 	def update_d_next_o_id(self, w_id, d_id, new_d_next_o_id):
 		"""Increment d_next_o_id of district-next-order-id collection"""
-		self.session['district-next-order-id'].update({'d_id': d_id, 'd_w_id': w_id}, {'$set':{'d_next_o_id': new_d_next_o_id}})
+		self.session['district-next-order-id'].update_one({'d_id': d_id, 'd_w_id': w_id}, {'$set':{'d_next_o_id': new_d_next_o_id}})
 
 	def get_all_local(self, w_id, orders):
 		for (_, supply_warehouse_id, _) in orders:
@@ -65,26 +69,26 @@ class NewOrderTransaction(Transaction):
 				return  0
 		return 1
 
-	def create_new_order(self, w_id, d_id, c_id, o_id, num_items, orders):
+	def create_new_order(self, w_id, d_id, c_id, o_id, num_items, orders, customer):
 		"""Create a new order (insert row into order-orderline collection)"""
 		all_local = self.get_all_local(w_id, orders)
-		time = datetime.strptime(datetime.utcnow().isoformat(' '), '%Y-%m-%d %H:%M:%S.%f')
+		t = datetime.strptime(datetime.utcnow().isoformat(' '), '%Y-%m-%d %H:%M:%S.%f')
 		self.session['order-orderline'].insert({
-			o_w_id: w_id,
-			o_d_id: d_id,
-			o_id: o_id,
-			o_c_id: c_id,
-			o_carrier_id: -1,
-			o_ol_cnt: num_items,
-			o_all_local: all_local,
-			o_entry_d: time,
-			o_c_first: customer.c_first,
-			o_c_middle: customer.c_middle,
-			o_c_last: customer.c_last,
-			o_delivery_d: -1,
-			o_orderlines:[]
+			'o_w_id': w_id,
+			'o_d_id': d_id,
+			'o_id': o_id,
+			'o_c_id': c_id,
+			'o_carrier_id': -1,
+			'o_ol_cnt': num_items,
+			'o_all_local': all_local,
+			'o_entry_d': t,
+			'o_c_first': customer.c_first,
+			'o_c_middle': customer.c_middle,
+			'o_c_last': customer.c_last,
+			'o_delivery_d': -1,
+			'o_orderlines': []
 		})
-		return time
+		return t
 
 	def update_stock_and_create_order_line(self, w_id, d_id, c_id, n, orders, d_tax, w_tax, c_discount):
 		"""Update stock collection, create a new order-line for each new item"""
@@ -93,8 +97,9 @@ class NewOrderTransaction(Transaction):
 		for index, (item_number, supplier_warehouse, quantity) in enumerate(orders):
 			item_result = []
 			item_result.append(item_number)
-			rows = self.session['stock'].find({'s_w_id': supplier_warehouse, 's_i_id': item_number}, {'s_quantity': 1, 's_ytd': 1, 's_order_cnt': 1, 's_remote_cnt': 1, 's_i_price': 1, 's_i_name': 1})
-			row = rows[0]
+			row = self.session['stock'].find_one({'s_w_id': supplier_warehouse, 's_i_id': item_number},
+												 {'s_quantity': 1, 's_ytd': 1, 's_order_cnt': 1, '_id': 0,
+												  's_remote_cnt': 1, 's_i_price': 1, 's_i_name': 1})
 			adjusted_qty = int(row.s_quantity) - quantity
 			if adjusted_qty < 10:
 				adjusted_qty += 100
@@ -105,7 +110,10 @@ class NewOrderTransaction(Transaction):
 			else:
 				counter = 0
 			new_s_remote_cnt = row.s_remote_cnt + counter
-			self.session['stock'].update({'s_w_id': supplier_warehouse, 's_i_id': item_number}, {'$set':{'s_quantity': Decimal(adjusted_qty), 's_ytd': Decimal(new_s_ytd), 's_order_cnt': int(new_s_order_cnt), 's_remote_cnt': int(new_s_remote_cnt)}}, {multi:True})
+			self.session['stock'].update({'s_w_id': supplier_warehouse, 's_i_id': item_number},
+											 {'$set':{'s_quantity': adjusted_qty,
+													  's_ytd': new_s_ytd, 's_order_cnt': new_s_order_cnt,
+													  's_remote_cnt': new_s_remote_cnt }}, multi=True)
 			item_result.append(row.i_name)
 			item_result.append(supplier_warehouse)
 			item_result.append(quantity)
@@ -114,13 +122,15 @@ class NewOrderTransaction(Transaction):
 			item_result.append(adjusted_qty)
 			total_amount = total_amount + item_amount
 
-			# TODO: insert new orderline into correct orderlines array inside order-orderline collection
-			# prepared_query2 = self.session.prepare('INSERT INTO order_line(ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info, i_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-			# bound_query2 = prepared_query2.bind([int(w_id), int(d_id), int(n), int(index), int(item_number), None, item_amount, supplier_warehouse, quantity, 'S_DIST'+str(d_id), row.i_name])
-			# self.session.execute(bound_query2)
-			self.session['order-order-line'].update({'o_id': value_of_o_id}, {'$push': {'o_orderline': value_added_to_orderline}})
-            # value_of_o_id: parameters to find the order which contains the correct orderline
-            # value_added_to_orderline: the value needs to be added to the orderline array
+			self.session['order-order-line'].update({'o_id': n }, {'$push': {'o_orderline': {
+				'ol_number': int(index),
+				'ol_i_id': int(item_number),
+				'ol_amount': item_amount,
+				'ol_supply_w_id': supplier_warehouse,
+				'ol_quantity': quantity,
+				'ol_dist_info': 'S_DIST'+str(d_id),
+				'ol_i_name': row.i_name
+			}}})
 			result.append(item_result)
 
 		total_amount = total_amount * (1 + d_tax + w_tax) * (1 - c_discount)
