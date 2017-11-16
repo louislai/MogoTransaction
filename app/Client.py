@@ -22,7 +22,7 @@ if len(sys.argv) > 1 and int (sys.argv[1]) == 1:
     write_concern = WriteConcern("majority")
 else:
     read_concern = ReadConcern("local")
-    write_concern = WriteConcern("1")
+    write_concern = WriteConcern(1)
 
 class Client:
 
