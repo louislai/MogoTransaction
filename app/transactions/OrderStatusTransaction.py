@@ -41,7 +41,7 @@ class OrderStatusTransaction(Transaction):
     # Get the customer info using C_ID
     def get_customer_info(self, c_w_id, c_d_id, c_id):
         results = self.session['customer'].find({'c_w_id': c_w_id, 'c_d_id': c_d_id, 'c_id': c_id},
-                                               {'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_balance': 1, '_id': 0})
+                                                {'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_balance': 1, '_id': 0})
         results = list(results)
 
         def get_info(doc):
@@ -60,7 +60,7 @@ class OrderStatusTransaction(Transaction):
     # Get the last order info from the customer
     def get_last_order(self, c_w_id, c_d_id, c_id):
         results = self.session['order-order-line'].find({'o_w_id': c_w_id, 'o_d_id': c_d_id, 'o_c_id': c_id},
-                                                       {'o_id': 1, 'o_entry_d': 1, 'o_carrier_id': 1, '_id': 0})
+                                                        {'o_id': 1, 'o_entry_d': 1, 'o_carrier_id': 1, '_id': 0})
         results = list(results)
 
         def get_info(doc):
@@ -74,10 +74,11 @@ class OrderStatusTransaction(Transaction):
 
     # Get info of each item in the latest order
     def get_order_line(self, c_w_id, c_d_id, o_id):
-        results = self.session['order-order-line'].find({'o_orderline.ol_w_id': c_w_id, 'o_orderline.ol_d_id': c_d_id, 'o_orderline.ol_o_id': o_id},
-                                                       {'o_orderline.ol_i_id': 1, 'o_orderline.ol_supply_w_id': 1,
-                                                        'o_orderline.ol_quanity': 1, 'o_orderline.ol_amount': 1,
-                                                        'o_orderline.ol_delivery_d': 1, '_id': 0})
+        results = self.session['order-order-line'].find({'o_orderline.ol_w_id': c_w_id, 'o_orderline.ol_d_id': c_d_id,
+                                                         'o_orderline.ol_o_id': o_id},
+                                                        {'o_orderline.ol_i_id': 1, 'o_orderline.ol_supply_w_id': 1,
+                                                         'o_orderline.ol_quanity': 1, 'o_orderline.ol_amount': 1,
+                                                         'o_orderline.ol_delivery_d': 1, '_id': 0})
         results = list(results)
 
         def get_info(doc):
