@@ -38,6 +38,9 @@ class CSVToJSON:
         self.OUT_DISTRICT_NEXT_UNDELIVERED_ID =                 \
             self.OUT_DIR + "/district-next-undelivered-id.json"
 
+        self.map_w_name = {}
+        self.map_d_name = {}
+
 
     def timemeasure(original_function):
         def new_function(*args, **kwargs):
@@ -62,6 +65,7 @@ class CSVToJSON:
                              'w_state'   : line[5],
                              'w_zip'     : line[6],
                              'w_ytd'     : float(line[8])})
+            self.map_w_name[int(line[0])] = line[1]
         for row in out_data:
             json.dump(row, out_file)
             out_file.write('\n')
@@ -81,6 +85,8 @@ class CSVToJSON:
                              'd_state'   : line[6],
                              'd_zip'     : line[7],
                              'd_ytd'     : float(line[9])})
+
+            self.map_d_name[int(line[0])] = line[2]
         for row in out_data:
             json.dump(row, out_file)
             out_file.write('\n')
@@ -111,6 +117,8 @@ class CSVToJSON:
                              'c_ytd_payment' : float(line[17]),
                              'c_payment_cnt' : int(line[18]),
                              'c_delivery_cnt': int(line[19]),
+                             'c_w_name': self.map_w_name[int(line[0])],
+                             'c_d_name': self.map_d_name[int(line[1])],
                              'c_data'        : line[20]});
             c_w_id, c_d_id, c_id, c_first, c_middle, c_last =            \
                     line[0], line[1], line[2], line[3], line[4], line[5]

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 time ./setup.sh
 echo "Generating test data"
+rm -rf test_data
 mkdir test_data
 time python test/TestDataGenerator.py
 echo "Generating csv"

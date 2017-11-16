@@ -55,11 +55,11 @@ class Client:
 
         elif transaction_type == Parser.POPULAR_ITEM:
             transaction = PopularItemTransaction(session)
-        # elif transaction_type == Parser.TOP_BALANCE:
-        #     transaction = TopBalanceTransaction(session)
-        #
-        # elif transaction_type == Parser.ORDER_LINE:
-        #     pass
+        elif transaction_type == Parser.TOP_BALANCE:
+            transaction = TopBalanceTransaction(session)
+
+        elif transaction_type == Parser.ORDER_LINE:
+            return
         else:
             return
 
