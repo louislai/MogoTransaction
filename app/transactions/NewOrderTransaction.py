@@ -70,10 +70,10 @@ class NewOrderTransaction(Transaction):
 		return 1
 
 	def create_new_order(self, w_id, d_id, c_id, o_id, num_items, orders, customer):
-		"""Create a new order (insert row into order-orderline collection)"""
+		"""Create a new order (insert row into order-order-line collection)"""
 		all_local = self.get_all_local(w_id, orders)
 		t = datetime.strptime(datetime.utcnow().isoformat(' '), '%Y-%m-%d %H:%M:%S.%f')
-		self.session['order-orderline'].insert({
+		self.session['order-order-line'].insert({
 			'o_w_id': w_id,
 			'o_d_id': d_id,
 			'o_id': o_id,
