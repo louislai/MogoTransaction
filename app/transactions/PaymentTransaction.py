@@ -18,52 +18,52 @@ class PaymentTransaction(Transaction):
 
 	def update_warehouse(self, warehouse_id, payment):
 		"""Increment w_ytd by payment, return warehouse print outputs"""
-		prepared_query = self.session.prepare('SELECT w_street_1, w_street_2, w_city, w_state, w_zip, w_ytd FROM warehouse WHERE w_id = ?')
-		bound_query = prepared_query.bind([warehouse_id])
-		rows = list(self.session.execute(bound_query))
-		if not rows:
+		row = self.session.warehouse.\
+					find_one({ 'w_id': warehouse_id },
+						 { '_id': 0, 'w_street_1': 1, 'w_street_2': 1, 'w_city': 1, 'w_state': 1, 'w_zip': 1, 'w_ytd': 1 })
+
+		if not row:
 			print "Cannot find any warehouse with w_id {}".format(warehouse_id)
 			return
 		else:
-			row = rows[0]
-			new_w_ytd = row.w_ytd + Decimal(payment)
-			prepared_query = self.session.prepare('UPDATE warehouse SET w_ytd = ? WHERE w_id = ?')
-			bound_query = prepared_query.bind([new_w_ytd, warehouse_id])
-			self.session.execute(bound_query)
+			row = self.objectify(row)
+			new_w_ytd = float(row.w_ytd) + payment
+			self.session.warehouse.update_one({ 'w_id': warehouse_id },  { '$set': { 'w_ytd': new_w_ytd }})
 			return row
 
 	def update_district(self, warehouse_id, district_id, payment):
 		"""Increment d_ytd by payment, return district print outputs"""
-		prepared_query = self.session.prepare('SELECT d_street_1, d_street_2, d_city, d_state, d_zip, d_ytd FROM district WHERE d_w_id = ? AND d_id = ?')
-		bound_query = prepared_query.bind([warehouse_id, district_id])
-		rows = list(self.session.execute(bound_query))
-		if not rows:
+		row = self.session.district\
+					.find_one({ 'd_w_id': warehouse_id, 'd_id': district_id },
+						  { '_id': 0, 'd_street_1': 1, 'd_street_2': 1, 'd_city': 1, 'd_state': 1, 'd_zip': 1, 'd_ytd': 1 })
+		if not row:
 			print "Cannot find any district with w_id d_id {} {}".format(warehouse_id, district_id)
 			return
 		else:
-			row = rows[0]
-			new_d_ytd = row.d_ytd + Decimal(payment)
-			prepared_query = self.session.prepare('UPDATE district SET d_ytd = ? WHERE d_w_id = ? AND d_id = ?')
-			bound_query = prepared_query.bind([new_d_ytd, warehouse_id, district_id])
-			self.session.execute(bound_query)
+			row = self.objectify(row)
+			new_d_ytd = float(row.d_ytd) + payment
+			self.session.district.update_one({ 'd_w_id': warehouse_id, 'd_id': district_id }, {'$set': {'d_ytd': new_d_ytd}})
 			return row
 
 	def update_customer(self, warehouse_id, district_id, customer_id, payment):
 		"""Decrease c_balance by payment, increase c_ytd_payment by payment, increment c_payment_cnt, return customer print outputs"""
-		prepared_query = self.session.prepare('SELECT c_first, c_middle, c_last, c_street_1, c_street_2, c_city, c_state, c_zip, c_phone, c_since, c_credit, c_discount, c_credit_lim, c_balance, c_ytd_payment, c_payment_cnt FROM customer WHERE c_id = ? AND c_w_id = ? AND c_d_id = ?')
-		bound_query = prepared_query.bind([customer_id, warehouse_id, district_id])
-		rows = list(self.session.execute(bound_query))
-		if not rows:
+		row = self.session.customer\
+					.find_one({ 'c_w_id': warehouse_id, 'c_d_id': district_id, 'c_id': customer_id },
+						  { '_id': 0, 'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_street_1': 1,
+							'c_street_2': 1, 'c_city': 1, 'c_state': 1, 'c_zip': 1, 'c_phone': 1,
+							'c_since': 1, 'c_credit': 1, 'c_discount': 1, 'c_credit_lim': 1,
+							'c_balance': 1, 'c_ytd_payment': 1, 'c_payment_cnt': 1 })
+		if not row:
 			print "Cannot find any customer with c_id w_id d_id {} {} {}".format(customer_id, warehouse_id, district_id)
 			return
 		else:
-			row = rows[0]
-			new_c_balance = row.c_balance - Decimal(payment)
+			row = self.objectify(row)
+			new_c_balance = row.c_balance - payment
 			new_c_ytd_payment = row.c_ytd_payment + float(payment)
 			new_c_payment_cnt = row.c_payment_cnt + 1
-			prepared_query = self.session.prepare('UPDATE customer SET c_balance = ?, c_ytd_payment = ?, c_payment_cnt = ? WHERE c_id = ? AND c_w_id = ? AND c_d_id = ?')
-			bound_query = prepared_query.bind([new_c_balance, new_c_ytd_payment, new_c_payment_cnt, customer_id, warehouse_id, district_id])
-			self.session.execute(bound_query)
+			self.session.customer.update_one({ 'c_w_id': warehouse_id, 'c_d_id': district_id, 'c_id': customer_id },
+											 {'$set': { 'c_ytd_payment': new_c_ytd_payment, 'c_balance': new_c_balance,
+														'c_payment_cnt': new_c_payment_cnt }})
 			return row, new_c_balance
 
 	def print_output(self, customer_id, warehouse_id, district_id, warehouse, district, customer, c_balance, payment):

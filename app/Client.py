@@ -38,19 +38,19 @@ class Client:
     def execute_transaction(self, session, transaction_type, transaction_params):
         transaction = DummyTransaction(session)
 
-        # if transaction_type == Parser.NEW_ORDER:
-        #     # transaction = NewOrderTransaction(session)
-        #
-        # elif transaction_type == Parser.PAYMENT:
-        #     transaction = PaymentTransaction(session)
-        #
-        # elif transaction_type == Parser.DELIVERY:
-        #     transaction = DeliveryTransaction(session)fr
-        #
-        # elif transaction_type == Parser.ORDER_STATUS:
-        #     transaction = OrderStatusTransaction(session)
-        #
-        if transaction_type == Parser.STOCK_LEVEL:
+        if transaction_type == Parser.NEW_ORDER:
+            transaction = NewOrderTransaction(session)
+
+        elif transaction_type == Parser.PAYMENT:
+            transaction = PaymentTransaction(session)
+
+        elif transaction_type == Parser.DELIVERY:
+            transaction = DeliveryTransaction(session)
+
+        elif transaction_type == Parser.ORDER_STATUS:
+            transaction = OrderStatusTransaction(session)
+
+        elif transaction_type == Parser.STOCK_LEVEL:
             transaction = StockLevelTransaction(session)
 
         elif transaction_type == Parser.POPULAR_ITEM:
