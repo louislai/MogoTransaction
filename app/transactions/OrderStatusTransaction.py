@@ -78,7 +78,7 @@ class OrderStatusTransaction(Transaction):
                                                         #  'o_orderline.ol_quanity': 1, 'o_orderline.ol_amount': 1,
                                                         #  'o_ol_delivery_d': 1, '_id': 0})
         result = results[0]
-        print(result)
+        # print(result)
 
         def get_delivery_d(doc):
             d = {'o_delivery_d': doc['o_delivery_d'],
