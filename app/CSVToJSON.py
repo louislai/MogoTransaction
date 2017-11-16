@@ -35,7 +35,6 @@ class CSVToJSON:
         self.OUT_STOCK_FILE_PATH      = self.OUT_DIR + "/stock.json"
         self.OUT_WAREHOUSE_TAX_FILE_PATH = self.OUT_DIR + "/warehouse-tax.json"
         self.OUT_DISTRICT_NEXT_ORDER_ID  = self.OUT_DIR + "/district-next-order-id.json"
-        self.OUT_DISTRICT_TAX_DATA  = self.OUT_DIR + "/district-tax-data.json"
         self.OUT_DISTRICT_NEXT_UNDELIVERED_ID =                 \
             self.OUT_DIR + "/district-next-undelivered-id.json"
 
@@ -275,7 +274,8 @@ class CSVToJSON:
         for line in itertools.islice(reader, self.ROW_COUNT):
             out_data.append({'d_w_id'     : int(line[0]),
                              'd_id'       : int(line[1]),
-                             'd_next_o_id': int(line[10])})
+                             'd_next_o_id': int(line[10]),
+                             'd_tax' : float(line[8])})
         for row in out_data:
             json.dump(row, out_file)
             out_file.write('\n')
@@ -291,22 +291,6 @@ class CSVToJSON:
         for line in itertools.islice(reader, self.ROW_COUNT):
             out_data.append({'w_id' : int(line[0]),
                              'w_tax': float(line[7])})
-        for row in out_data:
-            json.dump(row, out_file)
-            out_file.write('\n')
-        
-
-    """
-        Loads district next order id data
-    """
-    @timemeasure
-    def load_district_tax_data(self, csv_file, out_file):
-        reader = csv.reader(csv_file)
-        out_data = []
-        for line in itertools.islice(reader, self.ROW_COUNT):
-            out_data.append({'d_w_id': int(line[0]),
-                             'd_id'  : int(line[1]),
-                             'd_tax' : float(line[8])})
         for row in out_data:
             json.dump(row, out_file)
             out_file.write('\n')
@@ -378,9 +362,6 @@ class CSVToJSON:
         self.load_warehouse_tax_data(
                 open(self.WAREHOUSE_FILE_PATH),
                 open(self.OUT_WAREHOUSE_TAX_FILE_PATH, "w"))
-        self.load_district_tax_data(
-                open(self.DISTRICT_FILE_PATH, "r"),
-                open(self.OUT_DISTRICT_TAX_DATA, "w"))
         self.load_district_next_undelivered_id(
                 open(self.DISTRICT_FILE_PATH, "r"),
                 open(self.OUT_DISTRICT_NEXT_UNDELIVERED_ID, "w"))
