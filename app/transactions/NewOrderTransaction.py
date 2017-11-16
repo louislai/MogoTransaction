@@ -29,43 +29,35 @@ class NewOrderTransaction(Transaction):
 		self.print_items(print_item_results)
 
 	def get_w_tax(self, w_id):
-		"""Get warehouse tax from the vertical partition table warehouse_tax"""
-		prepared_query = self.session.prepare('SELECT w_tax FROM warehouse_tax WHERE w_id = ?')
-		bound_query = prepared_query.bind([w_id])
-		rows = list(self.session.execute(bound_query))
-		if not rows:
+		"""Get warehouse tax from the vertical partition collection warehouse-tax"""
+		results = self.session['warehouse-tax'].find({'w_id': w_id},{'w_tax': 1})
+		if not results:
 			print "Cannot find any warehouse with w_id {}".format(w_id)
 			return
 		else:
-			return Decimal(rows[0].w_tax)
+			return Decimal(results[0].w_tax)
 
 	def get_customer_for_output(self, w_id, d_id, c_id):
-		"""Get customer info (c_last, c_credit, c_discount) for printing output"""
-		prepared_query = self.session.prepare('SELECT c_last, c_credit, c_discount FROM customer WHERE  c_w_id = ? AND c_d_id = ? AND c_id = ?')
-		bound_query = prepared_query.bind([w_id, d_id, c_id])
-		rows = list(self.session.execute(bound_query))
-		if not rows:
+		"""Get customer info (c_first, c_middle, c_last, c_credit, c_discount) for printing output"""
+		results = self.session['customer'].find({'c_w_id': w_id, 'c_d_id': d_id, 'c_id': c_id}, {'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_credit': 1, 'c_discount': 1})
+		if not results:
 			print "Cannot find any customer with w_id d_id c_id {} {} {}".format(w_id, d_id, c_id)
 			return
 		else:
-			return rows[0]
+			return results[0]
 
 	def get_d_next_o_id_and_d_tax(self, w_id, d_id):
-		"""Get d_next_o_id and d_tax from vertical partition district_next_order_id table"""
-		prepared_query = self.session.prepare('SELECT d_next_o_id, d_tax FROM district_next_order_id WHERE d_w_id = ? AND d_id = ?')
-		bound_query = prepared_query.bind([w_id, d_id])
-		rows = list(self.session.execute(bound_query))
-		if not rows:
+		"""Get d_next_o_id and d_tax from vertical partition district-next-order-id"""
+		results = self.session['district-next-order-id'].find({'d_w_id': w_id, 'd_id': d_id}, {'d_next_o_id': 1, 'd_tax': 1})
+		if not results:
 			print "Cannot find any district with w_id d_id {} {}".format(w_id, d_id)
 			return
 		else:
 			return int(rows[0].d_next_o_id), Decimal(rows[0].d_tax)
 
 	def update_d_next_o_id(self, w_id, d_id, new_d_next_o_id):
-		"""Increment d_next_o_id of district_next_order_id table"""
-		prepared_query = self.session.prepare('UPDATE district_next_order_id SET d_next_o_id = ? WHERE d_id = ? AND d_w_id = ?')
-		bound_query = prepared_query.bind([w_id, d_id, new_d_next_o_id])
-		self.session.execute(bound_query)
+		"""Increment d_next_o_id of district-next-order-id collection"""
+		self.session['district-next-order-id'].update({'d_id': d_id, 'd_w_id': w_id}, {'$set':{'d_next_o_id': new_d_next_o_id}})
 
 	def get_all_local(self, w_id, orders):
 		for (_, supply_warehouse_id, _) in orders:
@@ -74,23 +66,35 @@ class NewOrderTransaction(Transaction):
 		return 1
 
 	def create_new_order(self, w_id, d_id, c_id, o_id, num_items, orders):
-		"""Create a new order (insert row into order_ table)"""
+		"""Create a new order (insert row into order-orderline collection)"""
 		all_local = self.get_all_local(w_id, orders)
 		time = datetime.strptime(datetime.utcnow().isoformat(' '), '%Y-%m-%d %H:%M:%S.%f')
-		prepared_query = self.session.prepare('INSERT INTO order_ (o_w_id, o_d_id, o_id, o_c_id, o_carrier_id, o_ol_cnt, o_all_local, o_entry_d) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-		bound_query = prepared_query.bind([w_id, d_id, o_id, c_id, -1, num_items, all_local, time])
-		self.session.execute(bound_query)
+		self.session['order-orderline'].insert({
+			o_w_id: w_id,
+			o_d_id: d_id,
+			o_id: o_id,
+			o_c_id: c_id,
+			o_carrier_id: -1,
+			o_ol_cnt: num_items,
+			o_all_local: all_local,
+			o_entry_d: time,
+			o_c_first: customer.c_first,
+			o_c_middle: customer.c_middle,
+			o_c_last: customer.c_last,
+			o_delivery_d: -1,
+			o_orderlines:[]
+		})
 		return time
 
 	def update_stock_and_create_order_line(self, w_id, d_id, c_id, n, orders, d_tax, w_tax, c_discount):
-		"""Update stock table, create a new order-line for each new item"""
+		"""Update stock collection, create a new order-line for each new item"""
 		total_amount = 0
 		result = []
 		for index, (item_number, supplier_warehouse, quantity) in enumerate(orders):
 			item_result = []
 			item_result.append(item_number)
-			row = self.session.execute('SELECT s_quantity, s_ytd, s_order_cnt, s_remote_cnt, i_price, i_name FROM stock WHERE s_w_id = {} AND s_i_id = {}'.format(int(supplier_warehouse), int(item_number)))
-			row = row[0]
+			rows = self.session['stock'].find({'s_w_id': supplier_warehouse, 's_i_id': item_number}, {'s_quantity': 1, 's_ytd': 1, 's_order_cnt': 1, 's_remote_cnt': 1, 's_i_price': 1, 's_i_name': 1})
+			row = rows[0]
 			adjusted_qty = int(row.s_quantity) - quantity
 			if adjusted_qty < 10:
 				adjusted_qty += 100
@@ -101,9 +105,7 @@ class NewOrderTransaction(Transaction):
 			else:
 				counter = 0
 			new_s_remote_cnt = row.s_remote_cnt + counter
-			prepared_query1 = self.session.prepare('UPDATE stock SET s_quantity = ?, s_ytd = ?, s_order_cnt = ?, s_remote_cnt = ? WHERE s_w_id = ? AND s_i_id = ?')
-			bound_query1 = prepared_query1.bind([Decimal(adjusted_qty), Decimal(new_s_ytd), int(new_s_order_cnt), int(new_s_remote_cnt), int(supplier_warehouse), int(item_number)])
-			self.session.execute(bound_query1)
+			self.session['stock'].update({'s_w_id': supplier_warehouse, 's_i_id': item_number}, {'$set':{'s_quantity': Decimal(adjusted_qty), 's_ytd': Decimal(new_s_ytd), 's_order_cnt': int(new_s_order_cnt), 's_remote_cnt': int(new_s_remote_cnt)}}, {multi:True})
 			item_result.append(row.i_name)
 			item_result.append(supplier_warehouse)
 			item_result.append(quantity)
@@ -111,9 +113,11 @@ class NewOrderTransaction(Transaction):
 			item_result.append(item_amount)
 			item_result.append(adjusted_qty)
 			total_amount = total_amount + item_amount
-			prepared_query2 = self.session.prepare('INSERT INTO order_line(ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info, i_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-			bound_query2 = prepared_query2.bind([int(w_id), int(d_id), int(n), int(index), int(item_number), None, item_amount, supplier_warehouse, quantity, 'S_DIST'+str(d_id), row.i_name])
-			self.session.execute(bound_query2)
+
+			# TODO: insert new orderline into correct orderlines array inside order-orderline collection
+			# prepared_query2 = self.session.prepare('INSERT INTO order_line(ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info, i_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+			# bound_query2 = prepared_query2.bind([int(w_id), int(d_id), int(n), int(index), int(item_number), None, item_amount, supplier_warehouse, quantity, 'S_DIST'+str(d_id), row.i_name])
+			# self.session.execute(bound_query2)
 			result.append(item_result)
 
 		total_amount = total_amount * (1 + d_tax + w_tax) * (1 - c_discount)
