@@ -118,6 +118,9 @@ class NewOrderTransaction(Transaction):
 			# prepared_query2 = self.session.prepare('INSERT INTO order_line(ol_w_id, ol_d_id, ol_o_id, ol_number, ol_i_id, ol_delivery_d, ol_amount, ol_supply_w_id, ol_quantity, ol_dist_info, i_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
 			# bound_query2 = prepared_query2.bind([int(w_id), int(d_id), int(n), int(index), int(item_number), None, item_amount, supplier_warehouse, quantity, 'S_DIST'+str(d_id), row.i_name])
 			# self.session.execute(bound_query2)
+			self.session['order-order-line'].update({'o_id': value_of_o_id}, {'$push': {'o_orderline': value_added_to_orderline}})
+            # value_of_o_id: parameters to find the order which contains the correct orderline
+            # value_added_to_orderline: the value needs to be added to the orderline array
 			result.append(item_result)
 
 		total_amount = total_amount * (1 + d_tax + w_tax) * (1 - c_discount)
