@@ -83,9 +83,12 @@ class DeliveryTransaction(Transaction):
             return self.objectify(d)
 
         smallest_order = [get_info(doc) for doc in results]
+
         if not smallest_order:
             print('Error in finding the next undelivered order')
             return
+
+        # print(smallest_order[0].d_next_undelivered_id)
         return smallest_order[0].d_next_undelivered_id
 
     # Get the customer id of the smallest order id
@@ -99,9 +102,12 @@ class DeliveryTransaction(Transaction):
             return self.objectify(d)
 
         customer_id = [get_info(doc) for doc in results]
+
         if not customer_id:
             print 'Cannot find customer for order number', smallest_order_number
             return
+
+        # print(customer_id[0].c_id)
         return customer_id[0].c_id
 
     # Update the O_CARRIER_ID with CARRIER_ID input
