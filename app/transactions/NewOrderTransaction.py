@@ -41,7 +41,7 @@ class NewOrderTransaction(Transaction):
 		"""Get customer info (c_first, c_middle, c_last, c_credit, c_discount) for printing output"""
 		result = self.session['customer']\
 			.find_one({'c_w_id': w_id, 'c_d_id': d_id, 'c_id': c_id},
-					  {'c_first': 1, 'c_middle': 1, 'c_last': 1, '_id': 0,
+					  {'_id': 0, 'c_first': 1, 'c_middle': 1, 'c_last': 1,
 					   'c_credit': 1, 'c_discount': 1})
 		if not result:
 			print "Cannot find any customer with w_id d_id c_id {} {} {}".format(w_id, d_id, c_id)
@@ -98,8 +98,9 @@ class NewOrderTransaction(Transaction):
 			item_result = []
 			item_result.append(item_number)
 			row = self.session['stock'].find_one({'s_w_id': supplier_warehouse, 's_i_id': item_number},
-												 {'s_quantity': 1, 's_ytd': 1, 's_order_cnt': 1, '_id': 0,
+												 {'_id': 0, 's_quantity': 1, 's_ytd': 1, 's_order_cnt': 1,
 												  's_remote_cnt': 1, 's_i_price': 1, 's_i_name': 1})
+			row = self.objectify(row)
 			adjusted_qty = int(row.s_quantity) - quantity
 			if adjusted_qty < 10:
 				adjusted_qty += 100
@@ -114,10 +115,10 @@ class NewOrderTransaction(Transaction):
 											 {'$set':{'s_quantity': adjusted_qty,
 													  's_ytd': new_s_ytd, 's_order_cnt': new_s_order_cnt,
 													  's_remote_cnt': new_s_remote_cnt }}, multi=True)
-			item_result.append(row.i_name)
+			item_result.append(row.s_i_name)
 			item_result.append(supplier_warehouse)
 			item_result.append(quantity)
-			item_amount = quantity * row.i_price
+			item_amount = quantity * row.s_i_price
 			item_result.append(item_amount)
 			item_result.append(adjusted_qty)
 			total_amount = total_amount + item_amount
@@ -129,7 +130,7 @@ class NewOrderTransaction(Transaction):
 				'ol_supply_w_id': supplier_warehouse,
 				'ol_quantity': quantity,
 				'ol_dist_info': 'S_DIST'+str(d_id),
-				'ol_i_name': row.i_name
+				'ol_i_name': row.s_i_name
 			}}})
 			result.append(item_result)
 
