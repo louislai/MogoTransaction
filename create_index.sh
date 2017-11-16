@@ -3,6 +3,10 @@
 mongo --port 21100 <<EOF
 use cs4224;
 
+db.getCollectionNames().forEach(function(collName) {
+    db.runCommand({dropIndexes: collName, index: "*"});
+});
+
 db.getCollection("district-next-order-id").createIndex({ d_w_id: 1, d_id: 1 });
 db.getCollection("warehouse-tax").createIndex({ w_id: "hashed" });
 db.getCollection("warehouse").createIndex({ w_id: "hashed" });
