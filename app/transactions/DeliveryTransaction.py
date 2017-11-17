@@ -59,9 +59,10 @@ class DeliveryTransaction(Transaction):
         return result['o_c_id'] if result else None
 
     def get_order_total_ol_amount(self, w_id, d_id, o_id):
-        return list(self.session['order-order-line'].aggregate(
+        result = list(self.session['order-order-line'].aggregate(
             [{'$match': {'o_w_id': w_id, 'o_d_id': d_id, 'o_id': o_id }}, {'$unwind': '$o_orderlines'},
-             {'$group': {'_id': None, 'ol_amount': {'$sum': '$o_orderlines.ol_amount' }}}]))[0]['ol_amount']
+             {'$group': {'_id': None, 'ol_amount': {'$sum': '$o_orderlines.ol_amount' }}}]))
+        return result[0]['ol_amount'] if result else 0.
 
     # Update the O_CARRIER_ID with CARRIER_ID input
     def update_order(self, w_id, smallest_order_number, carrier_id, d_id):
