@@ -3,7 +3,7 @@
 
 echo `date` >> duration.txt
 # Sleep 5 mins to make balancing is done for shards
-sleep 300000
+sleep 300
 
 # run experiment with NC and LEVEL argument supplied, e.g `./benchmark.sh 20`
 # LEVEL=0 means majority read and write, LEVEL=1 means local read and 1 write
