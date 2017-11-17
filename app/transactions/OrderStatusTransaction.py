@@ -85,8 +85,10 @@ class OrderStatusTransaction(Transaction):
                  'o_orderlines': doc['o_orderlines']}
             return self.objectify(d)
 
-        o_delivery_d = get_delivery_d(result).o_delivery_d
-        o_orderlines = get_delivery_d(result).o_orderlines
+        delivery_result = get_delivery_d(result)
+
+        o_delivery_d = delivery_result.o_delivery_d
+        o_orderlines = delivery_result.o_orderlines
         # print(o_orderlines[0].ol_i_name)
 
         # def get_info(doc):
