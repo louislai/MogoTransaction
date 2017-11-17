@@ -2,7 +2,11 @@
 # Experiment scripts to be run in sunfire node
 
 echo `date` >> duration.txt
-# run experiment with NC argument supplied, e.g `./benchmark.sh 20`
+# Sleep 5 mins to make balancing is done for shards
+sleep 5m
+
+# run experiment with NC and LEVEL argument supplied, e.g `./benchmark.sh 20`
+# LEVEL=0 means majority read and write, LEVEL=1 means local read and 1 write
 NC=$1
 LEVEL=$2
 acc_arr=(`tail -1 config.txt`)
@@ -14,7 +18,7 @@ for i in `seq 1 ${NC}`; do
     touch $log
     acc=${acc_arr[$(($serverIdx))]}
     ssh ${acc} \
-     "cd TransactionSystem-master && python app/Client.py ${LEVEL} < 4224-project-files/xact-files/${i}.txt > /dev/null" \
+     "cd MogoTransaction-master && python app/Client.py ${LEVEL} < 4224-project-files/xact-files/${i}.txt > /dev/null" \
      2>&1 | tee -a $log &
 done
 
@@ -23,7 +27,7 @@ wait
 rm -f db_state.txt
 touch db_state.txt
 ssh ${acc_arr[0]} \
- "cd TransactionSystem-master && python app/FinalOutputer.py ${LEVEL}" 2>&1 | tee -a db_state.txt
+ "cd MogoTransaction-master && python app/FinalOutputer.py ${LEVEL}" 2>&1 | tee -a db_state.txt
 
 echo `date` >> duration.txt
 
