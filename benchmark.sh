@@ -46,6 +46,6 @@ for f in `ls | grep log`; do
 done
 
 avg=`echo $sum $NR | awk '{print $1 / $2}'`
->&2 echo "Average throughput: $avg (xacts/s)" 2>&1 | tee -a aggregate.txt
->&2 echo "Min throughput: $min (xacts/s)" 2>&1 | tee -a aggregate.txt
->&2 echo "Max throughput: $max (xacts/s)" 2>&1 | tee -a aggregate.txt
+echo "Average throughput: $avg (xacts/s)" 2>&1 | tee -a aggregate.txt
+echo "Min throughput: $min (xacts/s)" 2>&1 | tee -a aggregate.txt
+echo "Max throughput: $max (xacts/s)" 2>&1 | tee -a aggregate.txt
