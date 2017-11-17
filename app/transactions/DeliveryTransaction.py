@@ -56,19 +56,21 @@ class DeliveryTransaction(Transaction):
 
             self.session['district-next-undelivered-id'].update({'d_w_id': w_id, 'd_id': d_id},
                                                                 {'$set':
-                                                                     {'d_next_undelivered_id': int(smallest_order_number) + 1}})
+                                                                {'d_next_undelivered_id': int(smallest_order_number) + 1}})
 
             self.update_order(w_id, smallest_order_number, carrier_id, d_id)
             sum_order = 0.
-            for ol_number in self.get_order_line_number(w_id, smallest_order_number, d_id):
-                sum_order += float(ol_number.ol_amount)
-                self.update_order_line(w_id, smallest_order_number, d_id, ol_number.ol_number)
+            orderline_info = self.get_order_line_number(w_id, smallest_order_number, d_id)
+            for index in orderline_info:
+                sum_order += float(index.ol_amount)
+
+            self.update_order_line(w_id, smallest_order_number, d_id)
 
             delivery_cnt = customer_balance_delivery.c_delivery_cnt
             current_balance = customer_balance_delivery.c_balance
             self.update_customer_balance_delivery(w_id, customer_id, sum_order, d_id, current_balance, delivery_cnt)
 
-        # print 'Delivery Transaction done'
+        print 'Delivery Transaction done'
         # print
 
     # Find the order with the smallest O_ID using W_ID and DISTRICT_NO from 1 to 10
@@ -118,34 +120,32 @@ class DeliveryTransaction(Transaction):
 
     # Find all the order-line numbers of each order
     def get_order_line_number(self, w_id, smallest_order_number, d_id):
-        results = self.session['order-order-line'].find({'o_orderline.ol_o_id': smallest_order_number,
-                                                         'o_orderline.ol_w_id': w_id,
-                                                         'o_orderline.ol_d_id': d_id},
-                                                        {'o_orderline.ol_number': 1,
-                                                         'o_orderline.ol_amount': 1,
-                                                         '_id': 0})
-        results = list(results)
+        results = self.session['order-order-line'].find({'o_id': smallest_order_number,
+                                                         'o_w_id': w_id,
+                                                         'o_d_id': d_id})
+                                                        # {'o_orderline.ol_number': 1,
+                                                        #  'o_orderline.ol_amount': 1,
+                                                        #  '_id': 0})
+        result = results[0]
 
         def get_info(doc):
-            d = {'ol_number': doc['o_orderline.ol_number'],
-                 'ol_amount': doc['o_orderline.ol_amount']}
+            d = {'o_orderlines': doc['o_orderlines']}
             return self.objectify(d)
 
-        order_line_info = [get_info(doc) for doc in results]
-        return order_line_info
+        order_line_info = get_info(result)
+        return order_line_info.o_orderlines
 
     # Update all the order-line in the order by setting OL_DELIVERY_D to the current date and time
-    def update_order_line(self, w_id, smallest_order_number, d_id, ol_number):
+    def update_order_line(self, w_id, smallest_order_number, d_id):
         # self.session.execute(self.update_order_line_query.bind(
         #     # [datetime.strptime(datetime.utcnow().isoformat(' '), '%Y-%m-%d %H:%M:%S.%f'),
         #     [datetime.utcnow(),
         #      smallest_order_number, num, ol_number]))
+        self.session['order-order-line'].update({'o_w_id': w_id,
+                                                 'o_d_id': d_id,
+                                                 'o_id': smallest_order_number},
+                                                {'$set': {'o_ol_delivery_d': datetime.utcnow()}})
 
-        self.session['order-order-line'].update({'o_orderline.ol_w_id': w_id,
-                                                 'o_orderline.ol_d_id': d_id,
-                                                 'o_orderline.ol_o_id': smallest_order_number,
-                                                 'o_orderline.ol_number': ol_number},
-                                                {'$set': {'o_orderline.ol_delivery_d': datetime.utcnow()}})
 
     # Get the current balance of the customer
     def get_customer_balance_delivery(self, w_id, customer_id, d_id):
