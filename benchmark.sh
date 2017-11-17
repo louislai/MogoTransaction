@@ -22,7 +22,7 @@ for i in `seq 1 ${NC}`; do
      2>&1 | tee -a $log &
 done
 
-# Wait for all processes to finish andd output final db states
+# Wait for all processes to finish and output final db states
 wait
 rm -f db_state.txt
 touch db_state.txt
