@@ -22,7 +22,7 @@ for i in `seq 1 ${NC}`; do
      2>&1 | tee -a $log &
 done
 
-# Wait for all processes to finish and output final db states
+# Wait for all processes to finish andd output final db states
 wait
 rm -f db_state.txt
 touch db_state.txt
@@ -46,6 +46,6 @@ for f in `ls | grep log`; do
 done
 
 avg=`echo $sum $NR | awk '{print $1 / $2}'`
->&2 echo "Average throughput: $avg (xacts/s)" | tee -a aggregate.txt
->&2 echo "Min throughput: $min (xacts/s)" | tee -a aggregate.txt
->&2 echo "Max throughput: $max (xacts/s)" | tee -a aggregate.txt
+>&2 echo "Average throughput: $avg (xacts/s)" 2>&1 | tee -a aggregate.txt
+>&2 echo "Min throughput: $min (xacts/s)" 2>&1 | tee -a aggregate.txt
+>&2 echo "Max throughput: $max (xacts/s)" 2>&1 | tee -a aggregate.txt
