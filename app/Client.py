@@ -1,4 +1,5 @@
 import sys
+import argparse
 import traceback
 
 from StatsCollector import StatsCollector
@@ -15,21 +16,13 @@ from transactions.PopularItemTransaction import PopularItemTransaction
 from transactions.StockLevelTransaction import StockLevelTransaction
 from transactions.TopBalanceTransaction import TopBalanceTransaction
 
-# Consistency level: 1 / not supplied for "local" for the read_concern & "1" for write concern
-# not-1 for "majority" for both read and write concerns
-if len(sys.argv) > 1 and int (sys.argv[1]) == 1:
-    read_concern = ReadConcern("majority")
-    write_concern = WriteConcern("majority")
-else:
-    read_concern = ReadConcern("local")
-    write_concern = WriteConcern(1)
-
 class Client:
 
-    def __init__(self):
+    def __init__(self, num_trans):
         # Inits parser and stats_collector
         self.stats_collector = StatsCollector()
         self.parser = Parser()
+        self.num_trans = num_trans
 
 
     """ Executes a transaction given cassandra session, transaction type and
@@ -77,7 +70,8 @@ class Client:
         session = client.get_database("cs4224", read_concern=read_concern, write_concern=write_concern)
 
         # Reading transactions line by line, parsing and execute
-        while True:
+        while self.num_trans > 0:
+            self.num_trans = self.num_trans - 1
             # Break if interrupted by user
             try:
                 line = sys.stdin.readline().strip()
@@ -117,6 +111,24 @@ class Client:
         sys.stderr.write("Execution throughput: %s (xact/s)\n" % (transaction_count * 1.0 / transaction_time))
 
 if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    # List of arguments
+    ap.add_argument("-n", "--number", required=False, help="Number of transactions to be executed")
+    ap.add_argument("-t", "--type", required=False, help="Read/Write concern type")
+    args = vars(ap.parse_args())
+
+    num_trans = int(args['number']) if args['number'] else 1000000000
+
+    # Consistency level: 1 / not supplied for "local" for the read_concern & "1" for write concern
+    # not-1 for "majority" for both read and write concerns
+    concern_type = int(args['type']) if args['type'] else 0
+    if (concern_type == 1):
+        read_concern = ReadConcern("majority")
+        write_concern = WriteConcern("majority")
+    else:
+        read_concern = ReadConcern("local")
+        write_concern = WriteConcern(1)
+
     print "Executing client"
-    client = Client()
+    client = Client(num_trans)
     client.execute()
