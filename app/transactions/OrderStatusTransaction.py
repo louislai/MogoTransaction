@@ -25,9 +25,9 @@ class OrderStatusTransaction(Transaction):
 
         order_line, date_time = self.get_order_line(c_w_id, c_d_id, order_number)
 
-        print('Customer Info: ', customer_name_first, customer_name_middle, customer_name_last,\
-            ' has balance of ', customer_balance)
-        print('Last order info: ', order_number, entry_date, carrier)
+        print 'Customer Info: ', customer_name_first, customer_name_middle, customer_name_last,\
+            ' has balance of ', customer_balance
+        print 'Last order info: ', order_number, entry_date, carrier
 
         for index in order_line:
             # print 'what', index

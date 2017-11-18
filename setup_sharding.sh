@@ -52,7 +52,7 @@ rs.initiate(
 )
 EOF"
 
-  ssh ${acc_arr[$shardId]} "source .bash_profile; mongos --fork --pidfilepath /temp/mongodb/pidmongos --logpath /temp/mongodb/log/mongos_${shardId}.log --configdb cfg/${acc_arr[0]##*@}:21000,${acc_arr[1]##*@}:21000,${acc_arr[2]##*@}:21000 --port 21100"
+  ssh ${acc_arr[$shardId]} "source .bash_profile; mongos --enableMajorityReadConcern --fork --pidfilepath /temp/mongodb/pidmongos --logpath /temp/mongodb/log/mongos_${shardId}.log --configdb cfg/${acc_arr[0]##*@}:21000,${acc_arr[1]##*@}:21000,${acc_arr[2]##*@}:21000 --port 21100"
 done
 
 for accId in `seq 0 4`; do
