@@ -37,9 +37,9 @@ class DatabaseStateTransaction(Transaction):
             for d_id in range(1, 11):
                 result = list(self.session['order-order-line']\
                               .aggregate([{ '$match': { 'o_w_id': w_id, 'o_d_id': d_id }},
-                                          { '$unwind': '$o_orderlines' },
-                                          { '$group': { '_id': None, 'ol_amount': { '$sum': '$o_orderlines.ol_amount' },
-                                                        'ol_quantity': { '$sum': '$o_orderlines.ol_quantity' }}}]))
+                                          { '$unwind': '$o_orderline' },
+                                          { '$group': { '_id': None, 'ol_amount': { '$sum': '$o_orderline.ol_amount' },
+                                                        'ol_quantity': { '$sum': '$o_orderline.ol_quantity' }}}]))
                 if not result:
                     continue
                 result = result[0]

@@ -24,6 +24,7 @@ class NewOrderTransaction(Transaction):
 		self.update_d_next_o_id(w_id, d_id, next_o_id+1)
 		entry_date = self.create_new_order(w_id, d_id, c_id, next_o_id, num_items, orders, customer)
 		c_discount = customer.c_discount
+		# print 'next o id', next_o_id
 		print_item_results, total_amount = self.update_stock_and_create_order_line(w_id, d_id, c_id, next_o_id, orders, d_tax, w_tax, c_discount)
 		self.print_output(w_id, d_id, c_id, customer, w_tax, d_tax, next_o_id, entry_date, num_items, total_amount)
 		self.print_items(print_item_results)
@@ -124,7 +125,7 @@ class NewOrderTransaction(Transaction):
 			total_amount = total_amount + item_amount
 
 			self.session['order-order-line'].update({ 'o_w_id': w_id, 'o_d_id': d_id, 'o_id': n }, {'$push': {'o_orderline': {
-				'ol_number': int(index),
+				'ol_number': int(index) + 1,
 				'ol_i_id': int(item_number),
 				'ol_amount': item_amount,
 				'ol_supply_w_id': supplier_warehouse,

@@ -19,12 +19,6 @@ class DeliveryTransaction(Transaction):
             if not customer_id:
                 continue
 
-            customer_balance_delivery = self.get_customer_balance_delivery(w_id, customer_id, d_id)
-            if not customer_balance_delivery:
-                continue
-
-
-
             self.session['district-next-undelivered-id'].update_one({'d_w_id': w_id, 'd_id': d_id},
                                                                 {'$set':
                                                                 {'d_next_undelivered_id': int(smallest_order_number) + 1}})
@@ -33,9 +27,7 @@ class DeliveryTransaction(Transaction):
 
             self.update_order(w_id, smallest_order_number, carrier_id, d_id)
 
-            delivery_cnt = customer_balance_delivery.c_delivery_cnt
-            current_balance = customer_balance_delivery.c_balance
-            self.update_customer_balance_delivery(w_id, customer_id, sum_order, d_id, current_balance, delivery_cnt)
+            self.update_customer_balance_delivery(w_id, customer_id, sum_order, d_id)
 
         print 'Delivery Transaction done'
 
@@ -60,9 +52,9 @@ class DeliveryTransaction(Transaction):
 
     def get_order_total_ol_amount(self, w_id, d_id, o_id):
         result = list(self.session['order-order-line'].aggregate(
-            [{'$match': {'o_w_id': w_id, 'o_d_id': d_id, 'o_id': o_id }}, {'$unwind': '$o_orderlines'},
-             {'$group': {'_id': None, 'ol_amount': {'$sum': '$o_orderlines.ol_amount' }}}]))
-        return result[0]['ol_amount'] if result else 0.
+            [{'$match': {'o_w_id': w_id, 'o_d_id': d_id, 'o_id': o_id }}, {'$unwind': '$o_orderline'},
+             {'$group': {'_id': None, 'ol_amount': {'$sum': '$o_orderline.ol_amount' }}}]))
+        return result[0]['ol_amount']
 
     # Update the O_CARRIER_ID with CARRIER_ID input
     def update_order(self, w_id, smallest_order_number, carrier_id, d_id):
@@ -71,16 +63,9 @@ class DeliveryTransaction(Transaction):
                                                     {'$set': {'o_carrier_id': carrier_id, 'o_delivery_d': datetime.utcnow()}})
 
 
-    # Get the current balance of the customer
-    def get_customer_balance_delivery(self, w_id, customer_id, d_id):
-        result = self.session['customer'].find_one({'c_id': customer_id, 'c_w_id': w_id, 'c_d_id': d_id},
-                                                {'c_balance': 1, 'c_delivery_cnt': 1, '_id': 0})
-
-        return self.objectify(result) if result else None
-
     # Increase the current customer balance with the value of the order
-    def update_customer_balance_delivery(self, w_id, customer_id, sum_order, d_id, current_balance, delivery_cnt):
-        self.session['customer'].update_one({'c_w_id': w_id, 'c_id': customer_id, 'c_d_id': d_id},
-                                            {'$set': {'c_balance': float(sum_order) + float(current_balance),
-                                                      'c_delivery_cnt': delivery_cnt + 1}})
+    def update_customer_balance_delivery(self, w_id, customer_id, sum_order, d_id):
+        self.session['customer'].find_one_and_update({'c_w_id': w_id, 'c_id': customer_id, 'c_d_id': d_id},
+                                            {'$inc': {'c_balance': float(sum_order),
+                                                      'c_delivery_cnt': 1}})
 
