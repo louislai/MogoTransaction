@@ -35,7 +35,7 @@ for shardId in `seq 0 4`; do
   # Run shard mongod
   for repId in `seq 0 2`; do
         echo "Running source .bash_profile; mongod --storageEngine wiredTiger --enableMajorityReadConcern --fork --shardsvr --directoryperdb --pidfilepath /temp/mongodb/pidshard${shardId} --dbpath /temp/mongodb/data/shard${shardId} --logpath /temp/mongodb/log/shard${shardId}.log --replSet shard${shardId} --port ${port}"
-        ssh ${acc_arr[$(( ($shardId + $repId) % 5 ))]} "source .bash_profile; mongod --fork --shardsvr --directoryperdb --pidfilepath /temp/mongodb/pidshard${shardId} --dbpath /temp/mongodb/data/shard${shardId} --logpath /temp/mongodb/log/shard${shardId}.log --replSet shard${shardId} --port ${port}"
+        ssh ${acc_arr[$(( ($shardId + $repId) % 5 ))]} "source .bash_profile; mongod  --storageEngine wiredTiger --enableMajorityReadConcern --fork --shardsvr --directoryperdb --pidfilepath /temp/mongodb/pidshard${shardId} --dbpath /temp/mongodb/data/shard${shardId} --logpath /temp/mongodb/log/shard${shardId}.log --replSet shard${shardId} --port ${port}"
   done
 
   # Create rs
@@ -52,7 +52,7 @@ rs.initiate(
 )
 EOF"
 
-  ssh ${acc_arr[$shardId]} "source .bash_profile; mongos --enableMajorityReadConcern --fork --pidfilepath /temp/mongodb/pidmongos --logpath /temp/mongodb/log/mongos_${shardId}.log --configdb cfg/${acc_arr[0]##*@}:21000,${acc_arr[1]##*@}:21000,${acc_arr[2]##*@}:21000 --port 21100"
+  ssh ${acc_arr[$shardId]} "source .bash_profile; mongos --fork --pidfilepath /temp/mongodb/pidmongos --logpath /temp/mongodb/log/mongos_${shardId}.log --configdb cfg/${acc_arr[0]##*@}:21000,${acc_arr[1]##*@}:21000,${acc_arr[2]##*@}:21000 --port 21100"
 done
 
 for accId in `seq 0 4`; do
