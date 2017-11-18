@@ -124,7 +124,7 @@ class NewOrderTransaction(Transaction):
 			item_result.append(adjusted_qty)
 			total_amount = total_amount + item_amount
 
-			self.session['order-order-line'].update({ 'o_w_id': w_id, 'o_d_id': d_id, 'o_id': n }, {'$push': {'o_orderline': {
+			self.session['order-order-line'].update({ 'o_w_id': w_id, 'o_d_id': d_id, 'o_id': n }, {'$push': {'o_orderlines': {
 				'ol_number': int(index) + 1,
 				'ol_i_id': int(item_number),
 				'ol_amount': item_amount,

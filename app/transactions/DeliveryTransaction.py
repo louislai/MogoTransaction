@@ -52,8 +52,8 @@ class DeliveryTransaction(Transaction):
 
     def get_order_total_ol_amount(self, w_id, d_id, o_id):
         result = list(self.session['order-order-line'].aggregate(
-            [{'$match': {'o_w_id': w_id, 'o_d_id': d_id, 'o_id': o_id }}, {'$unwind': '$o_orderline'},
-             {'$group': {'_id': None, 'ol_amount': {'$sum': '$o_orderline.ol_amount' }}}]))
+            [{'$match': {'o_w_id': w_id, 'o_d_id': d_id, 'o_id': o_id }}, {'$unwind': '$o_orderlines'},
+             {'$group': {'_id': None, 'ol_amount': {'$sum': '$o_orderlines.ol_amount' }}}]))
         return result[0]['ol_amount']
 
     # Update the O_CARRIER_ID with CARRIER_ID input
