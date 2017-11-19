@@ -19,11 +19,11 @@ class StatsCollector:
             self.total = 0
 
         def start(self):
-            self.start_time = time.clock()
+            self.start_time = time.time()
 
         def finish(self):
-            self.total += time.clock() - self.start_time
-            self.last = time.clock() - self.start_time
+            self.total += time.time() - self.start_time
+            self.last = time.time() - self.start_time
  
         def get_total_time(self):
             return self.total
