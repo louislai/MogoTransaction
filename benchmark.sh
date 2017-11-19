@@ -9,6 +9,15 @@ sleep 300
 # LEVEL=0 means majority read and write, LEVEL=1 means local read and 1 write
 NC=$1
 LEVEL=$2
+NUM_TRANSACTION=$3
+
+# Set n flag
+if [ -z "$NUM_TRANSACTION" ]; then
+    nflag=""
+else
+    nflag="-n $NUM_TRANSACTION"
+fi
+
 acc_arr=(`tail -1 config.txt`)
 
 for i in `seq 1 ${NC}`; do
