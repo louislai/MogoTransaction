@@ -68,6 +68,7 @@ class Client:
         # Connect to mongodb server
         client = MongoClient('localhost', 21100)
         session = client.get_database("cs4224", read_concern=read_concern, write_concern=write_concern)
+        sys.stderr.write("Using concern type: %s\n" % concern_type)
 
         # Reading transactions line by line, parsing and execute
         while self.num_trans > 0:
