@@ -27,7 +27,7 @@ for i in `seq 1 ${NC}`; do
     touch $log
     acc=${acc_arr[$(($serverIdx))]}
     ssh ${acc} \
-     "cd MogoTransaction-master && python app/Client.py -n 1000 -t ${LEVEL} < 4224-project-files/xact-files/${i}.txt > /dev/null" \
+     "cd MogoTransaction-master && python app/Client.py ${nflag} -t ${LEVEL} < 4224-project-files/xact-files/${i}.txt > /dev/null" \
      2>&1 | tee -a $log &
 done
 
