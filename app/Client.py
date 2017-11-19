@@ -67,11 +67,12 @@ class Client:
     def execute(self):
         # Connect to mongodb server
         client = MongoClient('localhost', 21100)
-        session = client.get_database("cs4224", read_concern=read_concern, write_concern=write_concern)
+        session = client.get_database("cs4224")
 
         # Reading transactions line by line, parsing and execute
         while self.num_trans > 0:
             self.num_trans = self.num_trans - 1
+            print "start"
             # Break if interrupted by user
             try:
                 line = sys.stdin.readline().strip()
@@ -95,6 +96,7 @@ class Client:
             transaction_params = self.parser.parse(line, transaction_type, extra_lines)
 
             # Execute transaction and measure time
+            print "finish"
             self.stats_collector.transaction_timer.start()
             self.execute_transaction(session, transaction_type, transaction_params)
             self.stats_collector.transaction_timer.finish()
