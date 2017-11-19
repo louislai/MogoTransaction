@@ -44,11 +44,9 @@ class TopBalanceTransaction(Transaction):
     def execute(self, params):
         # Get top 10 users with most balance
         # users = self.get_top_10_balance_users()
-        print "finish"
         users = list(self.session.customer\
                          .find({}, { '_id': 0,  'c_first': 1, 'c_middle': 1, 'c_last': 1, 'c_balance': 1, 'c_w_name': 1,
                                      'c_d_name': 1 }).sort('c_balance', -1).limit(10))
-        print "finsh"
         users = map(self.objectify, users)
 
         print 'Top 10 customers'
